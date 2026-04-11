@@ -2,6 +2,8 @@
 <html lang="zh">
 <head><meta charset="UTF-8"><title>老师端 - 我的</title><link rel="stylesheet" href="style.css"></head>
 <body>
+
+<!-- 管理员视图 -->
 <div>
 <div class="phone">
   <div class="header">
@@ -15,6 +17,7 @@
       <div class="profile-sub">星光钢琴机构 · 管理员</div>
     </div>
     <div class="card">
+      <div style="font-size:10px;color:#2C5F8A;font-weight:bold;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #F0F0F0;">管理员功能</div>
       <div class="menu-item">
         <div class="menu-icon">🏫</div>
         <div class="menu-text">机构信息</div>
@@ -27,11 +30,9 @@
       </div>
       <div class="menu-item">
         <div class="menu-icon">📚</div>
-        <div class="menu-text">课程模板</div>
+        <div class="menu-text">课程类型管理</div>
         <div class="menu-arrow">›</div>
       </div>
-    </div>
-    <div class="card">
       <div class="menu-item">
         <div class="menu-icon">📤</div>
         <div class="menu-text">导出学员 CSV</div>
@@ -45,8 +46,26 @@
     </div>
     <div class="card">
       <div class="menu-item">
+        <div class="menu-icon">🕐</div>
+        <div class="menu-text">可预约时间段</div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon">📋</div>
+        <div class="menu-text">预约列表</div>
+        <div class="menu-arrow">›</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="menu-item">
         <div class="menu-icon">🔒</div>
         <div class="menu-text">修改密码</div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon">📞</div>
+        <div class="menu-text">联系开发者</div>
+        <div style="margin-left:auto;font-size:12px;color:#888;margin-right:6px;">400-xxx-xxxx</div>
         <div class="menu-arrow">›</div>
       </div>
       <div class="menu-item" style="border-bottom:none;">
@@ -64,7 +83,63 @@
     <div class="tab"><div class="icon active"></div><div class="lbl active">我的</div></div>
   </div>
 </div>
-<div class="phone-label">老师端 · 我的</div>
+<div class="phone-label">老师端 · 我的（管理员）</div>
 </div>
+
+<!-- 普通老师视图 -->
+<div>
+<div class="phone">
+  <div class="header">
+    <h1>我的</h1>
+    <div style="width:28px;"></div>
+  </div>
+  <div class="body">
+    <div class="card profile-header" style="padding:16px;">
+      <div class="profile-avatar">李</div>
+      <div class="profile-name">李老师</div>
+      <div class="profile-sub">星光钢琴机构</div>
+    </div>
+    <div class="card">
+      <div class="menu-item">
+        <div class="menu-icon">🕐</div>
+        <div class="menu-text">可预约时间段</div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon">📋</div>
+        <div class="menu-text">预约列表</div>
+        <div class="menu-arrow">›</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="menu-item">
+        <div class="menu-icon">🔒</div>
+        <div class="menu-text">修改密码</div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon">📞</div>
+        <div class="menu-text">联系开发者</div>
+        <div style="margin-left:auto;font-size:12px;color:#888;margin-right:6px;">400-xxx-xxxx</div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item" style="border-bottom:none;">
+        <div class="menu-icon">🚪</div>
+        <div class="menu-text" style="color:#FF4D4F;">退出登录</div>
+        <div class="menu-arrow">›</div>
+      </div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tab"><div class="icon"></div><div class="lbl">首页</div></div>
+    <div class="tab"><div class="icon"></div><div class="lbl">课表</div></div>
+    <div class="tab"><div class="icon"></div><div class="lbl">学员</div></div>
+    <div class="tab"><div class="icon"></div><div class="lbl">通知</div></div>
+    <div class="tab"><div class="icon active"></div><div class="lbl active">我的</div></div>
+  </div>
+</div>
+<div class="phone-label">老师端 · 我的（普通老师）</div>
+</div>
+
 </body>
 </html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta charset="UTF-8"><title>老师端 - 可预约时间段</title><link rel="stylesheet" href="style.css"></head>
+<body>
+
+<!-- 设置时间段列表 -->
+<div>
+<div class="phone">
+  <div class="header">
+    <div style="font-size:14px;color:#fff;cursor:pointer;">← 返回</div>
+    <h1>可预约时间段</h1>
+    <div class="icon-btn">＋</div>
+  </div>
+  <div class="body">
+    <div style="background:#E6F4FF;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#1677FF;">
+      💡 学员可提前1天预约您的空闲时间段
+    </div>
+    <div class="section-header" style="margin-bottom:8px;">
+      <div class="section-title">本周空闲时间</div>
+    </div>
+    <div class="card">
+      <!-- 周四 -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:bold;color:#555;margin-bottom:6px;">周四 · 4月11日</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <div style="padding:6px 12px;border-radius:16px;font-size:12px;background:#E6F4FF;color:#1677FF;border:1px solid #BAE0FF;">14:00–14:45</div>
+          <div style="padding:6px 12px;border-radius:16px;font-size:12px;background:#F6FFED;color:#52C41A;border:1px solid #B7EB8F;">16:00–16:45 已预约</div>
+          <div style="padding:6px 12px;border-radius:16px;font-size:12px;background:#E6F4FF;color:#1677FF;border:1px solid #BAE0FF;">18:00–18:45</div>
+        </div>
+      </div>
+      <!-- 周五 -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:bold;color:#555;margin-bottom:6px;">周五 · 4月12日</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <div style="padding:6px 12px;border-radius:16px;font-size:12px;background:#E6F4FF;color:#1677FF;border:1px solid #BAE0FF;">15:00–15:45</div>
+          <div style="padding:6px 12px;border-radius:16px;font-size:12px;background:#E6F4FF;color:#1677FF;border:1px solid #BAE0FF;">17:00–17:45</div>
+        </div>
+      </div>
+      <!-- 周六 -->
+      <div>
+        <div style="font-size:12px;font-weight:bold;color:#555;margin-bottom:6px;">周六 · 4月13日</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <div style="padding:6px 12px;border-radius:16px;font-size:12px;background:#F6FFED;color:#52C41A;border:1px solid #B7EB8F;">10:00–10:45 已预约</div>
+          <div style="padding:6px 12px;border-radius:16px;font-size:12px;background:#F6FFED;color:#52C41A;border:1px solid #B7EB8F;">14:00–14:45 已预约</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#888;margin-top:4px;padding:0 4px;">
+      蓝色=可预约 · 绿色=已被预约（长按可删除空闲时段）
+    </div>
+  </div>
+</div>
+<div class="phone-label">老师端 · 可预约时间段列表</div>
+</div>
+
+<!-- 新增时间段 -->
+<div>
+<div class="phone">
+  <div class="header">
+    <div style="font-size:14px;color:#fff;cursor:pointer;">← 返回</div>
+    <h1>新增时间段</h1>
+    <div style="width:40px;"></div>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="form-item">
+        <div class="form-label">课程类型 *</div>
+        <div class="form-select"><span>陪练课</span><span>▾</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">日期 *</div>
+        <div class="form-select"><span>2024-04-11</span><span>📅</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">开始时间 *</div>
+        <div class="form-select"><span>14:00</span><span>🕐</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">结束时间 *</div>
+        <div class="form-select"><span>14:45</span><span>🕐</span></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:0;">
+      <div class="form-label" style="margin-bottom:8px;">批量添加（可选）</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div style="padding:5px 10px;border-radius:16px;font-size:12px;background:#2C5F8A;color:#fff;">周四</div>
+        <div style="padding:5px 10px;border-radius:16px;font-size:12px;background:#F0F2F5;color:#666;">周五</div>
+        <div style="padding:5px 10px;border-radius:16px;font-size:12px;background:#F0F2F5;color:#666;">周六</div>
+        <div style="padding:5px 10px;border-radius:16px;font-size:12px;background:#F0F2F5;color:#666;">周日</div>
+      </div>
+      <div style="font-size:11px;color:#888;margin-top:6px;">选择多个星期可批量创建相同时间段</div>
+    </div>
+    <button class="btn-primary">确认添加</button>
+  </div>
+</div>
+<div class="phone-label">老师端 · 新增时间段</div>
+</div>
+
+</body>
+</html>
