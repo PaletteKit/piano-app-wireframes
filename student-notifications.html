@@ -2,6 +2,8 @@
 <html lang="zh">
 <head><meta charset="UTF-8"><title>学员端 - 通知</title><link rel="stylesheet" href="style.css"></head>
 <body>
+
+<!-- 有未读通知（tabbar 红点状态） -->
 <div>
 <div class="phone">
   <div class="header"><h1>通知</h1></div>
@@ -9,21 +11,57 @@
     <div class="notif-item">
       <div class="unread-dot"></div>
       <div class="notif-title">五一放假通知</div>
-      <div class="notif-meta">星光钢琴 · 2024-04-10 10:00</div>
+      <div class="notif-meta">星光钢琴 · 2026-04-10 10:00</div>
     </div>
     <div class="notif-item">
+      <div class="unread-dot"></div>
       <div class="notif-title">课时不足提醒</div>
       <div class="notif-meta" style="color:#FA541C;">陪练课剩余 3 节，请及时续费</div>
-      <div class="notif-meta" style="margin-top:2px;">系统消息 · 2024-04-08</div>
+      <div class="notif-meta" style="margin-top:2px;">系统消息 · 2026-04-08</div>
     </div>
     <div class="notif-item">
       <div class="notif-title">上课提醒</div>
       <div class="notif-meta">明天 18:00 钢琴基础班，请准时</div>
-      <div class="notif-meta" style="margin-top:2px;">系统消息 · 2024-04-10</div>
+      <div class="notif-meta" style="margin-top:2px;">系统消息 · 2026-04-10</div>
     </div>
     <div class="notif-item">
       <div class="notif-title">4月课表调整</div>
-      <div class="notif-meta">星光钢琴 · 2024-04-05 14:30</div>
+      <div class="notif-meta">星光钢琴 · 2026-04-05 14:30</div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tab"><div class="icon"></div><div class="lbl">课表</div></div>
+    <div class="tab"><div class="icon"></div><div class="lbl">课时</div></div>
+    <div class="tab"><div class="icon"></div><div class="lbl">预约</div></div>
+    <div class="tab"><div class="icon active tab-badge" data-count="2"></div><div class="lbl active">通知</div></div>
+    <div class="tab"><div class="icon"></div><div class="lbl">我的</div></div>
+  </div>
+</div>
+<div class="phone-label">学员端 · 通知（有未读·tabbar数字角标）</div>
+</div>
+
+<!-- 全部已读（tabbar 无红点） -->
+<div>
+<div class="phone">
+  <div class="header"><h1>通知</h1></div>
+  <div class="body">
+    <div class="notif-item">
+      <div class="notif-title">五一放假通知</div>
+      <div class="notif-meta">星光钢琴 · 2026-04-10 10:00</div>
+    </div>
+    <div class="notif-item">
+      <div class="notif-title">课时不足提醒</div>
+      <div class="notif-meta" style="color:#FA541C;">陪练课剩余 3 节，请及时续费</div>
+      <div class="notif-meta" style="margin-top:2px;">系统消息 · 2026-04-08</div>
+    </div>
+    <div class="notif-item">
+      <div class="notif-title">上课提醒</div>
+      <div class="notif-meta">明天 18:00 钢琴基础班，请准时</div>
+      <div class="notif-meta" style="margin-top:2px;">系统消息 · 2026-04-10</div>
+    </div>
+    <div class="notif-item">
+      <div class="notif-title">4月课表调整</div>
+      <div class="notif-meta">星光钢琴 · 2026-04-05 14:30</div>
     </div>
   </div>
   <div class="tabbar">
@@ -34,7 +72,8 @@
     <div class="tab"><div class="icon"></div><div class="lbl">我的</div></div>
   </div>
 </div>
-<div class="phone-label">学员端 · 通知</div>
+<div class="phone-label">学员端 · 通知（全部已读·无角标）</div>
 </div>
+
 </body>
 </html>

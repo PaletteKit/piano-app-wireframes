@@ -121,7 +121,7 @@ body { font-family: Arial, sans-serif; background: #F0F2F5; min-height: 100vh; d
 .section-title { font-size: 13px; font-weight: bold; color: #444; }
 .section-more { font-size: 11px; color: #2C5F8A; cursor: pointer; }
 
-.tag { font-size: 10px; padding: 2px 7px; border-radius: 10px; }
-.tag-blue { background: #E6F4FF; color: #1677FF; }
-.tag-green { background: #F6FFED; color: #52C41A; }
-.tag-orange { background: #FFF7E6; color: #FA8C16; }
+.tab-badge { position: relative; }
+.tab-badge::after { content: attr(data-count); position: absolute; top: -4px; right: -6px; background: #FF4D4F; color: #fff; font-size: 9px; font-weight: bold; min-width: 14px; height: 14px; border-radius: 7px; display: flex; align-items: center; justify-content: center; padding: 0 3px; line-height: 1; }
+.tab-dot { position: relative; }
+.tab-dot::after { content: ''; position: absolute; top: -2px; right: -2px; width: 7px; height: 7px; background: #FF4D4F; border-radius: 50%; border: 1px solid #fff; }
