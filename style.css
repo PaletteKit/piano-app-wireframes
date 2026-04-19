@@ -125,3 +125,9 @@ body { font-family: Arial, sans-serif; background: #F0F2F5; min-height: 100vh; d
 .tab-badge::after { content: attr(data-count); position: absolute; top: -4px; right: -6px; background: #FF4D4F; color: #fff; font-size: 9px; font-weight: bold; min-width: 14px; height: 14px; border-radius: 7px; display: flex; align-items: center; justify-content: center; padding: 0 3px; line-height: 1; }
 .tab-dot { position: relative; }
 .tab-dot::after { content: ''; position: absolute; top: -2px; right: -2px; width: 7px; height: 7px; background: #FF4D4F; border-radius: 50%; border: 1px solid #fff; }
+
+/* Action item - 可点击操作项 */
+.action-item { display: flex; align-items: center; padding: 10px 0; gap: 10px; cursor: pointer; }
+.action-item:hover { background: #F8F9FA; margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+.action-item-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.action-item-arrow { color: #CCC; font-size: 18px; font-weight: bold; }

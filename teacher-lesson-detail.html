@@ -3,114 +3,148 @@
 <head><meta charset="UTF-8"><title>老师端 - 课程详情</title><link rel="stylesheet" href="style.css"></head>
 <body>
 
-<!-- 待上课 -->
+<!-- 周期课 · 待上课 -->
 <div>
 <div class="phone">
   <div class="header">
     <div style="font-size:14px;color:#fff;cursor:pointer;">← 返回</div>
     <h1>课程详情</h1>
-    <div style="font-size:13px;color:#AACCEE;cursor:pointer;">编辑</div>
+    <div style="width:40px;"></div>
   </div>
   <div class="body">
     <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div class="avatar" style="width:44px;height:44px;font-size:16px;">明</div>
-        <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="avatar" style="width:40px;height:40px;font-size:15px;">明</div>
+        <div style="flex:1;">
           <div style="font-size:15px;font-weight:bold;color:#222;">小明</div>
           <div style="font-size:12px;color:#888;">钢琴基础班</div>
         </div>
-        <div class="badge badge-scheduled" style="margin-left:auto;font-size:12px;padding:4px 10px;">待上课</div>
+        <div style="font-size:13px;color:#2C5F8A;cursor:pointer;">编辑</div>
+        <div class="badge badge-scheduled" style="font-size:12px;padding:4px 10px;">待上课</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div style="background:#F8F9FA;border-radius:8px;padding:8px;">
-          <div style="font-size:10px;color:#888;">上课时间</div>
-          <div style="font-size:13px;font-weight:bold;color:#222;margin-top:2px;">2024-04-11</div>
-          <div style="font-size:12px;color:#555;">18:00–18:45</div>
+      <div style="background:#F0F5FF;border-radius:8px;padding:8px 10px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:11px;color:#888;">周期课进度</span>
+          <span style="font-size:12px;font-weight:bold;color:#2C5F8A;">第 3 / 8 节</span>
         </div>
-        <div style="background:#F8F9FA;border-radius:8px;padding:8px;">
-          <div style="font-size:10px;color:#888;">授课老师</div>
-          <div style="font-size:13px;font-weight:bold;color:#222;margin-top:2px;">王老师</div>
-          <div style="font-size:12px;color:#555;">45 分钟</div>
-        </div>
-        <div style="background:#F8F9FA;border-radius:8px;padding:8px;">
-          <div style="font-size:10px;color:#888;">剩余课时</div>
-          <div style="font-size:13px;font-weight:bold;color:#2C5F8A;margin-top:2px;">8 课时</div>
-          <div style="font-size:12px;color:#555;">签到后扣 1 节</div>
-        </div>
-        <div style="background:#F8F9FA;border-radius:8px;padding:8px;">
-          <div style="font-size:10px;color:#888;">课程类型</div>
-          <div style="font-size:13px;font-weight:bold;color:#222;margin-top:2px;">周期课</div>
-          <div style="font-size:12px;color:#555;">第 3 / 8 节</div>
+        <div style="background:#D6E4F0;height:6px;border-radius:3px;overflow:hidden;">
+          <div style="background:linear-gradient(90deg,#2C5F8A,#4A90C4);height:100%;width:25%;border-radius:3px;"></div>
         </div>
       </div>
+      <div style="font-size:14px;color:#333;font-weight:500;">2024-04-11 周四 18:00–18:45</div>
+      <div style="font-size:12px;color:#888;margin-top:4px;">王老师 · 45分钟</div>
     </div>
     <div class="action-row">
       <button class="action-btn action-done">✓ 签到完成</button>
       <button class="action-btn action-absent">! 缺席</button>
       <button class="action-btn action-cancel">✕ 取消</button>
     </div>
-    <!-- 新增：周期课完结按钮 -->
     <div class="card" style="margin-top:10px;">
-      <div class="card-title">周期课操作</div>
-      <div style="font-size:12px;color:#666;padding:6px 0;border-bottom:1px solid #F0F0F0;cursor:pointer;">仅取消本节课</div>
-      <div style="font-size:12px;color:#FF4D4F;padding:6px 0;border-bottom:1px solid #F0F0F0;cursor:pointer;">取消本节及后续所有课</div>
-      <div style="font-size:12px;color:#FA8C16;padding:6px 0;cursor:pointer;">🏁 设置整个课程已完结（共 8 节，已上 2 节）</div>
+      <div style="font-size:12px;color:#888;padding:8px 0;border-bottom:1px solid #F0F0F0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+        <span>仅取消本节课</span><span style="color:#CCC;">›</span>
+      </div>
+      <div style="font-size:12px;color:#888;padding:8px 0;border-bottom:1px solid #F0F0F0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+        <span>取消本节及后续所有课</span><span style="color:#CCC;">›</span>
+      </div>
+      <div style="font-size:12px;color:#888;padding:8px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+        <span>设置课程已完结</span><span style="color:#CCC;">›</span>
+      </div>
     </div>
   </div>
 </div>
-<div class="phone-label">老师端 · 课程详情（待上课）</div>
+<div class="phone-label">老师端 · 周期课 · 待上课</div>
 </div>
 
-<!-- 已完成 + 课后记录 -->
+<!-- 单节课 · 待上课 -->
 <div>
 <div class="phone">
   <div class="header">
     <div style="font-size:14px;color:#fff;cursor:pointer;">← 返回</div>
     <h1>课程详情</h1>
-    <div style="font-size:13px;color:#AACCEE;cursor:pointer;">编辑记录</div>
+    <div style="width:40px;"></div>
   </div>
   <div class="body">
     <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div class="avatar" style="width:44px;height:44px;font-size:16px;">明</div>
-        <div>
-          <div style="font-size:15px;font-weight:bold;color:#222;">小明</div>
-          <div style="font-size:12px;color:#888;">钢琴基础班</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="avatar" style="width:40px;height:40px;font-size:15px;">红</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:bold;color:#222;">小红</div>
+          <div style="font-size:12px;color:#888;">钢琴进阶课</div>
         </div>
-        <div class="badge badge-done" style="margin-left:auto;font-size:12px;padding:4px 10px;">已完成</div>
+        <div style="font-size:13px;color:#2C5F8A;cursor:pointer;">编辑</div>
+        <div class="badge badge-scheduled" style="font-size:12px;padding:4px 10px;">待上课</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div style="background:#F8F9FA;border-radius:8px;padding:8px;">
-          <div style="font-size:10px;color:#888;">上课时间</div>
-          <div style="font-size:13px;font-weight:bold;color:#222;margin-top:2px;">2024-04-11</div>
-          <div style="font-size:12px;color:#555;">14:00–14:45</div>
+      <div style="background:#F0F5FF;border-radius:8px;padding:8px 10px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:11px;color:#888;">单次课</span>
+          <span style="font-size:12px;font-weight:bold;color:#2C5F8A;">第 1 / 1 节</span>
         </div>
-        <div style="background:#F8F9FA;border-radius:8px;padding:8px;">
-          <div style="font-size:10px;color:#888;">扣课时</div>
-          <div style="font-size:13px;font-weight:bold;color:#FF4D4F;margin-top:2px;">-1 课时</div>
-          <div style="font-size:12px;color:#555;">剩余 7 课时</div>
+        <div style="background:#D6E4F0;height:6px;border-radius:3px;overflow:hidden;">
+          <div style="background:linear-gradient(90deg,#2C5F8A,#4A90C4);height:100%;width:0%;border-radius:3px;"></div>
         </div>
       </div>
+      <div style="font-size:14px;color:#333;font-weight:500;">2024-04-12 周五 10:00–10:45</div>
+      <div style="font-size:12px;color:#888;margin-top:4px;">王老师 · 45分钟</div>
     </div>
-    <!-- 新增：课后记录 -->
-    <div class="card">
-      <div class="section-header">
-        <div class="card-title">课后记录</div>
-        <div class="section-more">编辑</div>
-      </div>
-      <div style="font-size:13px;color:#444;line-height:1.6;">
-        今天练习了拜厄第32首，右手节奏把握得不错，左手需要加强练习。下节课重点练习手指独立性，建议回家每天练习10分钟音阶。
-      </div>
-      <div style="font-size:11px;color:#888;margin-top:8px;">2024-04-11 14:52 · 王老师</div>
-    </div>
-    <!-- 状态纠正 -->
-    <div class="card">
-      <div class="card-title">纠正状态</div>
-      <div style="font-size:12px;color:#FAAD14;padding:6px 0;cursor:pointer;">标记为缺席（误操作纠正）</div>
+    <div class="action-row">
+      <button class="action-btn action-done">✓ 签到完成</button>
+      <button class="action-btn action-absent">! 缺席</button>
+      <button class="action-btn action-cancel">✕ 取消</button>
     </div>
   </div>
 </div>
-<div class="phone-label">老师端 · 课程详情（已完成+课后记录）</div>
+<div class="phone-label">老师端 · 单节课 · 待上课</div>
+</div>
+
+<!-- 周期课 · 已完成 -->
+<div>
+<div class="phone">
+  <div class="header">
+    <div style="font-size:14px;color:#fff;cursor:pointer;">← 返回</div>
+    <h1>课程详情</h1>
+    <div style="width:40px;"></div>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="avatar" style="width:40px;height:40px;font-size:15px;">明</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:bold;color:#222;">小明</div>
+          <div style="font-size:12px;color:#888;">钢琴基础班</div>
+        </div>
+        <div style="font-size:13px;color:#2C5F8A;cursor:pointer;">编辑</div>
+        <div class="badge badge-done" style="font-size:12px;padding:4px 10px;">已完成</div>
+      </div>
+      <div style="background:#F6FFED;border-radius:8px;padding:8px 10px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:11px;color:#888;">周期课进度</span>
+          <span style="font-size:12px;font-weight:bold;color:#52C41A;">第 3 / 8 节</span>
+        </div>
+        <div style="background:#D9F7BE;height:6px;border-radius:3px;overflow:hidden;">
+          <div style="background:linear-gradient(90deg,#52C41A,#73D13D);height:100%;width:37.5%;border-radius:3px;"></div>
+        </div>
+      </div>
+      <div style="font-size:14px;color:#333;font-weight:500;">2024-04-11 周四 14:00–14:45</div>
+      <div style="font-size:12px;color:#888;margin-top:4px;">王老师 · 45分钟</div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <div class="card-title" style="margin-bottom:0;">课后记录</div>
+        <div class="section-more" style="cursor:pointer;">编辑 ›</div>
+      </div>
+      <div style="font-size:13px;color:#444;line-height:1.6;margin-top:8px;">
+        今天练习了拜厄第32首，右手节奏把握得不错，左手需要加强练习。下节课重点练习手指独立性，建议回家每天练习10分钟音阶。
+      </div>
+      <div style="font-size:11px;color:#BBB;margin-top:8px;">王老师 · 2024-04-11 14:52</div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;color:#888;padding:8px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+        <span>标记为缺席（误操作纠正）</span><span style="color:#CCC;">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">老师端 · 周期课 · 已完成</div>
 </div>
 
 <!-- 编辑课后记录 -->
@@ -136,6 +170,55 @@
   </div>
 </div>
 <div class="phone-label">老师端 · 编辑课后记录</div>
+</div>
+
+<!-- 编辑课程 -->
+<div>
+<div class="phone">
+  <div class="header">
+    <div style="font-size:14px;color:#fff;cursor:pointer;">← 返回</div>
+    <h1>编辑课程</h1>
+    <div style="width:40px;"></div>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="form-item">
+        <div class="form-label">学员</div>
+        <div class="form-select"><span style="color:#333;">小明</span><span style="color:#CCC;">›</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">课程名称</div>
+        <input class="form-input" value="钢琴基础班" />
+      </div>
+      <div class="form-item">
+        <div class="form-label">上课日期</div>
+        <div class="form-select"><span style="color:#333;">2024-04-11 周四</span><span style="color:#CCC;">›</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">上课时间</div>
+        <div style="display:flex;gap:8px;">
+          <div class="form-select" style="flex:1;"><span style="color:#333;">18:00</span><span style="color:#CCC;">›</span></div>
+          <div style="display:flex;align-items:center;color:#CCC;">-</div>
+          <div class="form-select" style="flex:1;"><span style="color:#333;">18:45</span><span style="color:#CCC;">›</span></div>
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">授课老师</div>
+        <div class="form-select"><span style="color:#333;">王老师</span><span style="color:#CCC;">›</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">课程时长</div>
+        <div class="form-select"><span style="color:#333;">45 分钟</span><span style="color:#CCC;">›</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">备注</div>
+        <textarea class="form-input" rows="3" style="resize:none;" placeholder="选填，可记录特殊说明"></textarea>
+      </div>
+    </div>
+    <button class="btn-primary">保存修改</button>
+  </div>
+</div>
+<div class="phone-label">老师端 · 编辑课程</div>
 </div>
 
 </body>
