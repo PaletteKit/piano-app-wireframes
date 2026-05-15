@@ -2,6 +2,8 @@
 <html lang="zh">
 <head><meta charset="UTF-8"><title>老师端 - 新增课程</title><link rel="stylesheet" href="style.css"></head>
 <body>
+
+<!-- Screen 1: 普通老师端 - 创建单次课 -->
 <div>
 <div class="phone">
   <div class="header">
@@ -33,15 +35,57 @@
       </div>
       <div class="form-item">
         <div class="form-label">授课老师</div>
-        <div class="form-select"><span>王老师（当前登录）</span><span>▾</span></div>
+        <div class="form-select" style="background:#F5F5F5;color:#999;"><span>王老师（我）</span></div>
       </div>
     </div>
     <button class="btn-primary">创建课程</button>
   </div>
 </div>
-<div class="phone-label">老师端 · 新增单次课</div>
+<div class="phone-label">新增单次课 · 普通老师端（授课老师固定为自己）</div>
 </div>
 
+<!-- Screen 2: 管理员端 - 创建单次课（可选择授课老师） -->
+<div>
+<div class="phone">
+  <div class="header">
+    <div style="font-size:14px;color:#fff;cursor:pointer;">← 返回</div>
+    <h1>新增课程</h1>
+    <div style="width:40px;"></div>
+  </div>
+  <div class="body">
+    <div class="segment">
+      <div class="seg-item active">单次课</div>
+      <div class="seg-item">周期课</div>
+    </div>
+    <div class="card">
+      <div class="form-item">
+        <div class="form-label">授课老师 *</div>
+        <div class="form-select"><span>王老师</span><span>▾</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">选择学员 *</div>
+        <div class="form-select"><span>请选择学员</span><span>▾</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">课程模板 *</div>
+        <div class="form-select"><span>请选择课程</span><span>▾</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">上课日期 *</div>
+        <div class="form-select"><span>2024-04-11</span><span>📅</span></div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">上课时间 *</div>
+        <div class="form-select"><span>18:00</span><span>🕐</span></div>
+      </div>
+    </div>
+    <button class="btn-primary">创建课程</button>
+  </div>
+</div>
+<div class="phone-label">新增单次课 · 管理员端（可选择任意授课老师）</div>
+</div>
+
+<!-- Screen 3: 周期课（公共，授课老师逻辑同上） -->
 <div>
 <div class="phone">
   <div class="header">
@@ -95,7 +139,8 @@
     <button class="btn-primary">创建 8 节课程</button>
   </div>
 </div>
-<div class="phone-label">老师端 · 新增周期课</div>
+<div class="phone-label">新增周期课</div>
 </div>
+
 </body>
 </html>
