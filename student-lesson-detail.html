@@ -1,9 +1,53 @@
 <!DOCTYPE html>
 <html lang="zh">
-<head><meta charset="UTF-8"><title>学员端 - 课程详情</title><link rel="stylesheet" href="style.css"></head>
+<head><meta charset="UTF-8"><title>学员端 - 课程详情</title><link rel="stylesheet" href="style.css">
+<style>
+.img-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-top:10px; }
+.img-thumb { aspect-ratio:1; border-radius:6px; overflow:hidden; position:relative; cursor:pointer; }
+.img-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.img-more-mask {
+  position:absolute; inset:0; background:rgba(0,0,0,0.48);
+  border-radius:6px; display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:bold; color:#fff; cursor:pointer;
+}
+.img-preview-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92);
+  z-index:9999; flex-direction:column; align-items:center; justify-content:center;
+}
+.img-preview-overlay.active { display:flex; }
+.img-preview-close {
+  position:absolute; top:16px; right:18px; color:#fff; font-size:24px;
+  cursor:pointer; line-height:1; background:none; border:none; padding:4px 8px;
+}
+.img-preview-main { width:100%; max-width:320px; display:flex; align-items:center; justify-content:center; gap:0; }
+.img-preview-main img { width:100%; max-height:420px; object-fit:contain; border-radius:8px; }
+.img-preview-arrow {
+  position:absolute; top:50%; transform:translateY(-50%);
+  color:#fff; font-size:28px; cursor:pointer; padding:8px 12px;
+  background:rgba(255,255,255,0.1); border-radius:50%; border:none;
+  line-height:1; user-select:none;
+}
+.img-preview-arrow.left { left:10px; }
+.img-preview-arrow.right { right:10px; }
+.img-preview-counter {
+  position:absolute; bottom:24px; color:rgba(255,255,255,0.7); font-size:13px;
+}
+</style>
+</head>
 <body>
 
-<!-- 周期课 · 已完成 -->
+<!-- 全屏图片预览弹层（公共） -->
+<div class="img-preview-overlay" id="imgPreview">
+  <button class="img-preview-close" onclick="closePreview()">✕</button>
+  <button class="img-preview-arrow left" onclick="prevImg()">‹</button>
+  <div class="img-preview-main">
+    <img id="previewImg" src="" />
+  </div>
+  <button class="img-preview-arrow right" onclick="nextImg()">›</button>
+  <div class="img-preview-counter" id="previewCounter"></div>
+</div>
+
+<!-- 周期课 · 已完成（9张图示例，展示+6遮罩） -->
 <div>
 <div class="phone">
   <div class="header">
@@ -37,6 +81,18 @@
       <div style="font-size:13px;color:#444;line-height:1.6;margin-top:8px;">
         今天练习了拜厄第32首，右手节奏把握得不错，左手需要加强练习。下节课重点练习手指独立性，建议回家每天练习10分钟音阶。
       </div>
+      <div class="img-grid">
+        <div class="img-thumb" onclick="openPreview(imgs9,0)">
+          <img src="https://picsum.photos/seed/p1/200/200" />
+        </div>
+        <div class="img-thumb" onclick="openPreview(imgs9,1)">
+          <img src="https://picsum.photos/seed/p2/200/200" />
+        </div>
+        <div class="img-thumb" onclick="openPreview(imgs9,2)">
+          <img src="https://picsum.photos/seed/p3/200/200" />
+          <div class="img-more-mask">+6</div>
+        </div>
+      </div>
       <div style="font-size:11px;color:#BBB;margin-top:8px;">王老师 · 2024-04-04 18:52</div>
     </div>
     <div class="card">
@@ -44,10 +100,10 @@
     </div>
   </div>
 </div>
-<div class="phone-label">学员端 · 周期课 · 已完成</div>
+<div class="phone-label">学员端 · 周期课 · 已完成（9张图 · 显示+6遮罩）</div>
 </div>
 
-<!-- 单节课 · 已完成 -->
+<!-- 单节课 · 已完成（2张图，正常展示） -->
 <div>
 <div class="phone">
   <div class="header">
@@ -81,12 +137,69 @@
       <div style="font-size:13px;color:#444;line-height:1.6;margin-top:8px;">
         今天学习了肖邦夜曲Op.9 No.2，触键处理有进步，踏板使用还需注意。建议多听录音感受乐句呼吸。
       </div>
+      <div class="img-grid">
+        <div class="img-thumb" onclick="openPreview(imgs2,0)">
+          <img src="https://picsum.photos/seed/p4/200/200" />
+        </div>
+        <div class="img-thumb" onclick="openPreview(imgs2,1)">
+          <img src="https://picsum.photos/seed/p5/200/200" />
+        </div>
+      </div>
       <div style="font-size:11px;color:#BBB;margin-top:8px;">王老师 · 2024-04-05 10:50</div>
     </div>
   </div>
 </div>
-<div class="phone-label">学员端 · 单节课 · 已完成</div>
+<div class="phone-label">学员端 · 单节课 · 已完成（2张图 · 正常展示）</div>
 </div>
 
+<!-- 图片全屏预览 -->
+<div>
+<div class="phone" style="position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background:#000;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <img src="https://picsum.photos/seed/p3/400/400" style="width:100%;object-fit:contain;" />
+    <div style="position:absolute;bottom:24px;color:rgba(255,255,255,0.65);font-size:13px;">3 / 9</div>
+  </div>
+  <div class="header"><div style="font-size:14px;color:#fff;">← 返回</div><h1>课程详情</h1><div style="width:40px;"></div></div>
+  <div class="body"></div>
+</div>
+<div class="phone-label">学员端 · 图片全屏预览（第3张 / 共9张）</div>
+</div>
+
+<script>
+var imgs9 = [
+  'https://picsum.photos/seed/p1/600/600',
+  'https://picsum.photos/seed/p2/600/600',
+  'https://picsum.photos/seed/p3/600/600',
+  'https://picsum.photos/seed/p4/600/600',
+  'https://picsum.photos/seed/p5/600/600',
+  'https://picsum.photos/seed/p6/600/600',
+  'https://picsum.photos/seed/p7/600/600',
+  'https://picsum.photos/seed/p8/600/600',
+  'https://picsum.photos/seed/p9/600/600',
+];
+var imgs2 = [
+  'https://picsum.photos/seed/p4/600/600',
+  'https://picsum.photos/seed/p5/600/600',
+];
+var _imgs = [], _idx = 0;
+function openPreview(imgs, idx) {
+  _imgs = imgs; _idx = idx;
+  document.getElementById('previewImg').src = imgs[idx];
+  document.getElementById('previewCounter').textContent = (idx+1) + ' / ' + imgs.length;
+  document.getElementById('imgPreview').classList.add('active');
+}
+function closePreview() { document.getElementById('imgPreview').classList.remove('active'); }
+function prevImg() {
+  _idx = (_idx - 1 + _imgs.length) % _imgs.length;
+  document.getElementById('previewImg').src = _imgs[_idx];
+  document.getElementById('previewCounter').textContent = (_idx+1) + ' / ' + _imgs.length;
+}
+function nextImg() {
+  _idx = (_idx + 1) % _imgs.length;
+  document.getElementById('previewImg').src = _imgs[_idx];
+  document.getElementById('previewCounter').textContent = (_idx+1) + ' / ' + _imgs.length;
+}
+document.getElementById('imgPreview').addEventListener('click', function(e){ if(e.target===this) closePreview(); });
+</script>
 </body>
 </html>

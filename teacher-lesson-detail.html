@@ -1,7 +1,62 @@
 <!DOCTYPE html>
 <html lang="zh">
-<head><meta charset="UTF-8"><title>老师端 - 课程详情</title><link rel="stylesheet" href="style.css"></head>
+<head><meta charset="UTF-8"><title>老师端 - 课程详情</title><link rel="stylesheet" href="style.css">
+<style>
+.img-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-top:10px; }
+.img-thumb { aspect-ratio:1; border-radius:6px; overflow:hidden; position:relative; cursor:pointer; }
+.img-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.img-more-mask {
+  position:absolute; inset:0; background:rgba(0,0,0,0.48);
+  border-radius:6px; display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:bold; color:#fff; cursor:pointer;
+}
+.img-upload-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.img-upload-cell { aspect-ratio:1; border-radius:6px; overflow:hidden; position:relative; background:#F5F5F5; }
+.img-upload-cell img { width:100%; height:100%; object-fit:cover; display:block; }
+.img-upload-del {
+  position:absolute; top:3px; right:3px; width:16px; height:16px;
+  background:rgba(0,0,0,0.45); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; color:#fff; cursor:pointer;
+}
+.img-upload-add {
+  aspect-ratio:1; border-radius:6px; border:1.5px dashed #D9D9D9;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; background:#FAFAFA;
+}
+.img-preview-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92);
+  z-index:9999; flex-direction:column; align-items:center; justify-content:center;
+}
+.img-preview-overlay.active { display:flex; }
+.img-preview-close {
+  position:absolute; top:16px; right:18px; color:#fff; font-size:24px;
+  cursor:pointer; line-height:1; background:none; border:none; padding:4px 8px;
+}
+.img-preview-main { width:100%; max-width:320px; display:flex; align-items:center; justify-content:center; }
+.img-preview-main img { width:100%; max-height:420px; object-fit:contain; border-radius:8px; }
+.img-preview-arrow {
+  position:absolute; top:50%; transform:translateY(-50%);
+  color:#fff; font-size:28px; cursor:pointer; padding:8px 12px;
+  background:rgba(255,255,255,0.1); border-radius:50%; border:none; line-height:1; user-select:none;
+}
+.img-preview-arrow.left { left:10px; }
+.img-preview-arrow.right { right:10px; }
+.img-preview-counter { position:absolute; bottom:24px; color:rgba(255,255,255,0.7); font-size:13px; }
+</style>
+</head>
 <body>
+
+<!-- 全屏图片预览弹层（公共） -->
+<div class="img-preview-overlay" id="imgPreview">
+  <button class="img-preview-close" onclick="closePreview()">✕</button>
+  <button class="img-preview-arrow left" onclick="prevImg()">‹</button>
+  <div class="img-preview-main">
+    <img id="previewImg" src="" />
+  </div>
+  <button class="img-preview-arrow right" onclick="nextImg()">›</button>
+  <div class="img-preview-counter" id="previewCounter"></div>
+</div>
 
 <!-- 周期课 · 待上课 -->
 <div>
@@ -96,7 +151,7 @@
 <div class="phone-label">老师端 · 单节课 · 待上课</div>
 </div>
 
-<!-- 周期课 · 已完成 -->
+<!-- 周期课 · 已完成（9张图） -->
 <div>
 <div class="phone">
   <div class="header">
@@ -135,6 +190,18 @@
       <div style="font-size:13px;color:#444;line-height:1.6;margin-top:8px;">
         今天练习了拜厄第32首，右手节奏把握得不错，左手需要加强练习。下节课重点练习手指独立性，建议回家每天练习10分钟音阶。
       </div>
+      <div class="img-grid">
+        <div class="img-thumb" onclick="openPreview(imgs9,0)">
+          <img src="https://picsum.photos/seed/p1/200/200" />
+        </div>
+        <div class="img-thumb" onclick="openPreview(imgs9,1)">
+          <img src="https://picsum.photos/seed/p2/200/200" />
+        </div>
+        <div class="img-thumb" onclick="openPreview(imgs9,2)">
+          <img src="https://picsum.photos/seed/p3/200/200" />
+          <div class="img-more-mask">+6</div>
+        </div>
+      </div>
       <div style="font-size:11px;color:#BBB;margin-top:8px;">王老师 · 2024-04-11 14:52</div>
     </div>
     <div class="card">
@@ -144,10 +211,10 @@
     </div>
   </div>
 </div>
-<div class="phone-label">老师端 · 周期课 · 已完成</div>
+<div class="phone-label">老师端 · 周期课 · 已完成（9张图 · 显示+6遮罩）</div>
 </div>
 
-<!-- 编辑课后记录 -->
+<!-- 编辑课后记录（已满9张，不显示添加按钮） -->
 <div>
 <div class="phone">
   <div class="header">
@@ -162,14 +229,66 @@
     <div class="card">
       <div class="form-item">
         <div class="form-label">课后记录</div>
-        <textarea class="form-input" rows="8" style="resize:none;line-height:1.6;">今天练习了拜厄第32首，右手节奏把握得不错，左手需要加强练习。下节课重点练习手指独立性，建议回家每天练习10分钟音阶。</textarea>
+        <textarea class="form-input" rows="6" style="resize:none;line-height:1.6;">今天练习了拜厄第32首，右手节奏把握得不错，左手需要加强练习。下节课重点练习手指独立性，建议回家每天练习10分钟音阶。</textarea>
       </div>
       <div style="font-size:11px;color:#888;text-align:right;">128 / 500字</div>
+    </div>
+    <div class="card">
+      <div class="form-label" style="margin-bottom:8px;">上传图片 <span style="font-size:11px;color:#BBB;font-weight:normal;">（最多9张）</span></div>
+      <div class="img-upload-grid">
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p1/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p2/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p3/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p4/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p5/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p6/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p7/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p8/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p9/200/200" /><div class="img-upload-del">✕</div></div>
+      </div>
+      <div style="font-size:11px;color:#F5222D;margin-top:6px;">已达上限 9 / 9 张</div>
     </div>
     <button class="btn-primary">保存记录</button>
   </div>
 </div>
-<div class="phone-label">老师端 · 编辑课后记录</div>
+<div class="phone-label">老师端 · 编辑课后记录（已满9张）</div>
+</div>
+
+<!-- 编辑课后记录（上传中，2张已传，还可继续） -->
+<div>
+<div class="phone">
+  <div class="header">
+    <div style="font-size:14px;color:#fff;cursor:pointer;">← 返回</div>
+    <h1>编辑课后记录</h1>
+    <div style="width:40px;"></div>
+  </div>
+  <div class="body">
+    <div style="background:#E6F4FF;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#1677FF;">
+      小明 · 钢琴基础班 · 2024-04-11
+    </div>
+    <div class="card">
+      <div class="form-item">
+        <div class="form-label">课后记录</div>
+        <textarea class="form-input" rows="6" style="resize:none;line-height:1.6;">今天练习了拜厄第32首，右手节奏把握得不错，左手需要加强练习。下节课重点练习手指独立性，建议回家每天练习10分钟音阶。</textarea>
+      </div>
+      <div style="font-size:11px;color:#888;text-align:right;">128 / 500字</div>
+    </div>
+    <div class="card">
+      <div class="form-label" style="margin-bottom:8px;">上传图片 <span style="font-size:11px;color:#BBB;font-weight:normal;">（最多9张）</span></div>
+      <div class="img-upload-grid">
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p1/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><img src="https://picsum.photos/seed/p2/200/200" /><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-add">
+          <div style="font-size:20px;color:#CCC;line-height:1;">+</div>
+          <div style="font-size:10px;color:#BBB;margin-top:3px;">添加图片</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#BBB;margin-top:6px;">已上传 2 / 9 张</div>
+    </div>
+    <button class="btn-primary">保存记录</button>
+  </div>
+</div>
+<div class="phone-label">老师端 · 编辑课后记录（2张，可继续上传）</div>
 </div>
 
 <!-- 编辑课程 -->
@@ -221,5 +340,50 @@
 <div class="phone-label">老师端 · 编辑课程</div>
 </div>
 
+<!-- 图片全屏预览 -->
+<div>
+<div class="phone" style="position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background:#000;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <img src="https://picsum.photos/seed/p3/400/400" style="width:100%;object-fit:contain;" />
+    <div style="position:absolute;bottom:24px;color:rgba(255,255,255,0.65);font-size:13px;">3 / 9</div>
+  </div>
+  <div class="header"><div style="font-size:14px;color:#fff;">← 返回</div><h1>课程详情</h1><div style="width:40px;"></div></div>
+  <div class="body"></div>
+</div>
+<div class="phone-label">老师端 · 图片全屏预览（第3张 / 共9张）</div>
+</div>
+
+<script>
+var imgs9 = [
+  'https://picsum.photos/seed/p1/600/600',
+  'https://picsum.photos/seed/p2/600/600',
+  'https://picsum.photos/seed/p3/600/600',
+  'https://picsum.photos/seed/p4/600/600',
+  'https://picsum.photos/seed/p5/600/600',
+  'https://picsum.photos/seed/p6/600/600',
+  'https://picsum.photos/seed/p7/600/600',
+  'https://picsum.photos/seed/p8/600/600',
+  'https://picsum.photos/seed/p9/600/600',
+];
+var _imgs = [], _idx = 0;
+function openPreview(imgs, idx) {
+  _imgs = imgs; _idx = idx;
+  document.getElementById('previewImg').src = imgs[idx];
+  document.getElementById('previewCounter').textContent = (idx+1) + ' / ' + imgs.length;
+  document.getElementById('imgPreview').classList.add('active');
+}
+function closePreview() { document.getElementById('imgPreview').classList.remove('active'); }
+function prevImg() {
+  _idx = (_idx - 1 + _imgs.length) % _imgs.length;
+  document.getElementById('previewImg').src = _imgs[_idx];
+  document.getElementById('previewCounter').textContent = (_idx+1) + ' / ' + _imgs.length;
+}
+function nextImg() {
+  _idx = (_idx + 1) % _imgs.length;
+  document.getElementById('previewImg').src = _imgs[_idx];
+  document.getElementById('previewCounter').textContent = (_idx+1) + ' / ' + _imgs.length;
+}
+document.getElementById('imgPreview').addEventListener('click', function(e){ if(e.target===this) closePreview(); });
+</script>
 </body>
 </html>
