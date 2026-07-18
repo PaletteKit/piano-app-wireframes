@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>多人课 UI 方案 v2</title>
+<style>
+  :root {
+    /* Matches app.wxss — all brand tokens from real mini program */
+    --primary: #2C5F8A;
+    --primary-rgb: 44, 95, 138;
+    --color-bg: #F2F2F7;          /* page background (CLAUDE.md: iOS #F2F2F7) */
+    --green: #34C759;
+    --orange: #FF9500;
+    --text: #222;                  /* card titles, names */
+    --secondary: #8E8E93;          /* meta text, form labels, placeholders */
+    --border: #C7C7CC;             /* dividers, arrows, secondary borders */
+    --highlight-bg: #F2F2F7;       /* badge bg, progress box, secondary btn */
+    --card-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif; background: #E8E8ED; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; gap: 28px; flex-wrap: wrap; }
+
+  /* ── rpx→px reference (375px phone): 16rpx=8px, 24rpx=12px, 28rpx=14px, 80rpx=40px ── */
+
+  /* Phone frame */
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .phone {
+    width: 375px; background: #fff; border-radius: 32px;
+    border: 3px solid #1a1a1a; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
+    flex-shrink: 0; position: relative;
+  }
+  .phone-label {
+    font-size: 13px; color: #666; font-weight: 600;
+    text-align: center; max-width: 320px; line-height: 1.5;
+  }
+  .phone-label .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; margin-right: 4px;
+  }
+  .tag-new { background: #F6FFED; color: #34C759; }
+  .tag-changed { background: #FFF7E6; color: #FA8C16; }
+
+  /* ── Navigation bar (WeChat native style: white bg, dark text) ── */
+  .nav { background: #fff; color: var(--text); padding: 12px 12px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 5; border-bottom: 1px solid #F0F0F0; }
+  .nav-back { font-size: 15px; color: var(--text); cursor: pointer; position: absolute; left: 12px; }
+  .nav-back:active { opacity: 0.5; }
+  .nav-title { font-size: 17px; font-weight: 600; }
+  .nav-spacer { width: 40px; }
+
+  /* Body */
+  .body { padding: 12px; background: var(--color-bg); min-height: 520px; }
+  .body.scrollable { max-height: 520px; overflow-y: auto; }
+
+  /* Segment (matches create-lesson.wxss: bg=#F2F2F7, 16rpx, 6rpx padding) */
+  .segment { display: flex; background: var(--highlight-bg); border-radius: 8px; padding: 3px; margin-bottom: 12px; }
+  .seg-item { flex: 1; text-align: center; padding: 8px 0; font-size: 13px; color: var(--secondary); border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+  .seg-item.active { background: #fff; color: var(--primary); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+  /* Card (matches app: 16rpx=8px radius, 24rpx=12px padding, 24rpx=12px margin) */
+  .card { background: #fff; border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: var(--card-shadow); }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+
+  /* Form (matches create-lesson.wxss: 28rpx=14px padding) */
+  .form-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--highlight-bg); cursor: pointer; transition: background 0.15s; }
+  .form-row:active { background: #FAFAFA; margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+  .form-row:last-child { border-bottom: none; }
+  .form-label { font-size: 14px; color: var(--secondary); flex-shrink: 0; margin-right: 10px; }
+  .form-value { display: flex; align-items: center; font-size: 14px; color: var(--text); text-align: right; gap: 6px; }
+  .form-placeholder { color: var(--border); }
+  .form-arrow { color: var(--border); font-size: 16px; }
+
+  /* Student multi-select (chips match app tag style) */
+  .student-row { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+  .selected-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; background: #E6F4FF; color: var(--primary); font-size: 12px; padding: 3px 8px; border-radius: 10px; font-weight: 500; }
+  .chip-x { cursor: pointer; font-size: 14px; line-height: 1; opacity: 0.5; transition: opacity 0.15s; }
+  .chip-x:hover { opacity: 0.9; }
+  .chip-hint { font-size: 12px; color: var(--primary); cursor: pointer; }
+
+  /* Button (matches app: 80rpx=40px pill, font-weight:500) */
+  .btn-primary { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 40px; padding: 12px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 4px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2); }
+  .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.6; pointer-events: none; }
+  .btn-secondary { width: 100%; background: var(--highlight-bg); color: var(--secondary); border: none; border-radius: 40px; padding: 12px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 8px; transition: all 0.2s; }
+  .btn-secondary:active { opacity: 0.8; }
+
+  /* ============ MULTI-STUDENT DETAIL STYLES ============ */
+
+  /* Lesson info */
+  .lesson-info { margin-bottom: 12px; }
+  .lesson-info-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .lesson-course-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .lesson-edit { font-size: 13px; color: var(--primary); cursor: pointer; }
+  .lesson-edit:active { opacity: 0.6; }
+  .lesson-status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .lesson-status-pill { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px; display: flex; align-items: center; gap: 4px; background: var(--highlight-bg); }
+  .lesson-status-pill.all-scheduled { color: var(--primary); }
+  .lesson-status-pill.mixed { color: var(--orange); }
+  .lesson-status-pill.all-done { color: var(--green); }
+  .lesson-status-sub { font-size: 12px; color: var(--secondary); }
+  .lesson-time-box { background: var(--highlight-bg); border-radius: 8px; padding: 8px 12px; }
+  .lesson-time-main { font-size: 14px; color: var(--text); font-weight: 500; }
+  .lesson-time-sub { font-size: 12px; color: var(--secondary); margin-top: 3px; }
+
+  /* Student check-in cards */
+  .student-cards { display: flex; flex-direction: column; gap: 8px; }
+  .stu-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; transition: all 0.3s; background: #FAFAFA; }
+  .stu-card.interactive { background: #fff; border: 1px solid #F0F0F0; }
+  .stu-card.pulse { animation: cardPulse 0.6s ease; }
+  @keyframes cardPulse { 0%,100% { background:#fff; } 50% { background:#F6FFED; } }
+
+  /* Avatar (matches app: D6E4F0 bg, primary color text, overflow for images) */
+  .stu-avatar { width: 36px; height: 36px; border-radius: 50%; background: #D6E4F0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--primary); flex-shrink: 0; overflow: hidden; }
+  .stu-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .stu-info { flex: 1; min-width: 0; }
+  .stu-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .stu-meta { font-size: 12px; color: var(--secondary); margin-top: 1px; }
+
+  /* Student badge (matches lesson-detail: uniform #F2F2F7 bg + colored text) */
+  .stu-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; flex-shrink: 0; transition: all 0.3s; background: var(--highlight-bg); }
+  .stu-badge.scheduled { color: var(--primary); }
+  .stu-badge.completed { color: var(--green); }
+  .stu-badge.absent { color: var(--orange); }
+
+  /* Per-student action buttons (round, matches app pill feel) */
+  .stu-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .stu-btn { width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: all 0.2s; font-weight: bold; line-height: 1; }
+  .stu-btn:active { transform: scale(0.9); }
+  .stu-btn-done { background: var(--green); color: #fff; }
+  .stu-btn-absent { background: var(--orange); color: #fff; }
+
+  .batch-hint { font-size: 12px; color: var(--secondary); text-align: center; padding: 8px 0 4px; }
+
+  /* Bottom bar (matches app: fixed, safe-area, pill buttons) */
+  .bottom-bar { position: sticky; bottom: 0; left: 0; right: 0; background: #fff; padding: 8px 12px; box-shadow: 0 -1px 6px rgba(0,0,0,0.06); z-index: 10; display: flex; gap: 8px; align-items: center; }
+  .bottom-btn { flex: 1; border-radius: 40px; padding: 12px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .bottom-btn:active { transform: scale(0.98); }
+  .bottom-btn-absent { background: var(--highlight-bg); color: var(--secondary); }
+  .bottom-btn-cancel { background: #fff; color: var(--secondary); border: 1px solid var(--border); }
+  .bottom-btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2); }
+  .bottom-student-tag { display: flex; align-items: center; gap: 6px; background: var(--highlight-bg); padding: 6px 10px; border-radius: 8px; font-size: 12px; color: var(--primary); font-weight: 600; }
+
+  /* ── Vant Weapp component annotations ──
+     In the real mini program, these are replaced by:
+     .overlay + .sheet → <van-popup position="bottom" round />
+     .dialog-overlay → <van-dialog id="van-dialog" />
+     .toast → <van-toast id="van-toast" />
+     .student-check-list picker → <van-checkbox-group> inside <van-popup>
+     segment → custom (no Vant equivalent used)
+  ───────────────────────────────────── */
+
+  /* Overlay */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); z-index: 20; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+
+  /* Sheet (bottom popup — use van-popup in real app) */
+  .sheet { width: 100%; background: #fff; border-radius: 12px 12px 0 0; padding-bottom: 24px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); max-height: 70%; display: flex; flex-direction: column; }
+  .overlay.show .sheet { transform: translateY(0); }
+  .sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px; flex-shrink: 0; }
+  .sheet-cancel { font-size: 14px; color: var(--secondary); cursor: pointer; }
+  .sheet-title { font-size: 16px; font-weight: 600; color: var(--text); }
+  .sheet-confirm { font-size: 14px; color: var(--primary); font-weight: 600; cursor: pointer; }
+  .sheet-list { flex: 1; overflow-y: auto; padding: 0 16px; }
+
+  /* Sheet check items (use van-checkbox-group in real app) */
+  .sheet-item { display: flex; align-items: center; padding: 10px 0; gap: 10px; cursor: pointer; border-bottom: 1px solid var(--highlight-bg); transition: background 0.15s; }
+  .sheet-item:last-child { border-bottom: none; }
+  .sheet-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .sheet-check.on { background: var(--primary); border-color: var(--primary); }
+  .sheet-check.on::after { content: '✓'; color: #fff; font-size: 11px; font-weight: bold; }
+  .sheet-student-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .sheet-student-meta { font-size: 12px; color: var(--secondary); margin-top: 1px; }
+  .sheet-item-tag { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 6px; margin-left: auto; flex-shrink: 0; }
+  .sheet-item-tag.warn { background: #FFF7E6; color: #FA8C16; }
+
+  /* Dialog (use van-dialog in real app) */
+  .dialog-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 30; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .dialog-overlay.show { opacity: 1; pointer-events: auto; }
+  .dialog { background: #fff; border-radius: 12px; padding: 24px 16px 16px; width: 270px; text-align: center; box-shadow: 0 16px 48px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.2s; }
+  .dialog-overlay.show .dialog { transform: scale(1); }
+  .dialog-icon { font-size: 36px; margin-bottom: 10px; }
+  .dialog-title { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .dialog-body { font-size: 14px; color: var(--secondary); line-height: 1.5; margin-bottom: 18px; }
+  .dialog-body strong { color: var(--text); }
+  .dialog-buttons { display: flex; gap: 8px; }
+  .dialog-btn { flex: 1; border-radius: 40px; padding: 11px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+  .dialog-btn:active { transform: scale(0.97); }
+  .dialog-btn-cancel { background: var(--highlight-bg); color: var(--secondary); }
+  .dialog-btn-primary { background: var(--primary); color: #fff; }
+
+  /* Toast (use van-toast in real app) */
+  .toast { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.78); color: #fff; font-size: 14px; padding: 10px 20px; border-radius: 20px; z-index: 40; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .toast.show { opacity: 1; }
+
+  /* Series progress card (matches real app: progress-card in lesson-detail.wxss) */
+  .progress-card-wrapper { background: var(--highlight-bg); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; }
+  .progress-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .progress-card-label { font-size: 11px; color: var(--secondary); }
+  .progress-card-value { font-size: 12px; font-weight: 600; color: var(--primary); }
+  .progress-card-track { background: var(--border); height: 4px; border-radius: 2px; overflow: hidden; }
+  .progress-card-fill { background: var(--primary); height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .progress-card-wrapper.completed .progress-card-fill { background: var(--green); }
+  .progress-card-wrapper.completed .progress-card-value { color: var(--green); }
+
+  /* Progress */
+  .progress-box { background: var(--highlight-bg); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; }
+  .progress-box-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .progress-box-label { font-size: 11px; color: var(--secondary); }
+  .progress-box-value { font-size: 12px; font-weight: 600; color: var(--primary); }
+  .progress-track { background: var(--border); height: 4px; border-radius: 2px; overflow: hidden; }
+  .progress-fill { background: var(--primary); height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .checkin-progress { margin-bottom: 12px; }
+  .checkin-progress-bar { background: var(--border); height: 4px; border-radius: 2px; overflow: hidden; margin-top: 6px; }
+  .checkin-progress-fill { background: var(--green); height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .checkin-progress-text { font-size: 11px; color: var(--secondary); margin-top: 4px; text-align: right; }
+
+  /* Action list (matches lesson-detail.wxss) */
+  .action-list-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--highlight-bg); cursor: pointer; font-size: 13px; color: var(--secondary); transition: background 0.15s; }
+  .action-list-item:last-child { border-bottom: none; }
+
+  /* Section header */
+  .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .section-more { font-size: 13px; color: var(--primary); cursor: pointer; }
+
+  /* Collapsible section header */
+  .section-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 2px 0; }
+  .section-toggle:active { opacity: 0.6; }
+  .section-arrow { font-size: 14px; color: #C7C7CC; transition: transform 0.25s; flex-shrink: 0; }
+  .section-arrow.collapsed { transform: rotate(-90deg); }
+  .section-body { transition: all 0.25s; overflow: hidden; }
+  .section-body.collapsed { display: none; }
+
+  /* Note area */
+  .note-text { font-size: 13px; color: #444; line-height: 1.6; }
+  .note-meta { font-size: 11px; color: var(--border); margin-top: 10px; }
+  .badge-flash { animation: badgeFlash 0.4s ease; }
+  @keyframes badgeFlash { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
+
+  /* Lesson block (schedule list — matches real app) */
+  .lesson-block { background: #fff; border-left: 3px solid var(--primary); padding: 10px 12px; border-radius: 0 8px 8px 0; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .lesson-block:active { background: #FAFAFB; }
+  .lesson-block.mixed { border-left-color: var(--orange); }
+  .lesson-block.done { border-left-color: var(--green); opacity: 0.85; }
+  .lesson-block .lb-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .lesson-block .lb-meta { font-size: 11px; color: var(--secondary); margin-top: 2px; }
+  .lb-progress-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 6px; margin-top: 4px; }
+  .lb-progress-tag.in-progress { background: #FFF7E6; color: #FA8C16; }
+  .lb-progress-tag.done { background: #F6FFED; color: var(--green); }
+
+  /* Avatar group (stacked, matches schedule list) */
+  .avatar-group { display: flex; }
+  .avatar-group .stu-avatar { width: 24px; height: 24px; font-size: 10px; border: 2px solid #fff; margin-left: -8px; }
+  .avatar-group .stu-avatar:first-child { margin-left: 0; }
+
+  /* ============ PER-STUDENT EVALUATION ============ */
+
+  /* Evaluation student card */
+  .eval-student-card { padding: 0; overflow: hidden; }
+  .eval-student-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; cursor: pointer; transition: background 0.15s;
+  }
+  .eval-student-header:active { background: #FAFAFA; }
+  .eval-expand { font-size: 14px; color: #C7C7CC; transition: transform 0.25s; }
+  .eval-student-card.open .eval-expand { transform: rotate(180deg); }
+
+  .eval-body { padding: 0 16px 14px; border-top: 1px solid #F2F2F7; }
+  .eval-section { padding: 12px 0; border-bottom: 1px solid #F2F2F7; }
+  .eval-section:last-child { border-bottom: none; }
+  .eval-section-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+
+  /* Star rows */
+  .eval-stars-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0;
+  }
+  .eval-stars-row.interactive { padding: 10px 0; }
+  .eval-dim-label { font-size: 14px; color: var(--text); }
+  .eval-edit-link { font-size: 13px; color: var(--primary); cursor: pointer; display: inline-block; margin-top: 6px; }
+  .eval-edit-link:active { opacity: 0.6; }
+  .eval-empty { font-size: 13px; color: #C7C7CC; padding: 8px 0; }
+
+  /* Editable stars */
+  .eval-stars-editable { display: flex; gap: 2px; }
+  .star-pick { font-size: 28px; color: #C7C7CC; cursor: pointer; transition: all 0.15s; user-select: none; }
+  .star-pick:active { transform: scale(1.2); }
+  .star-pick.filled { color: #FF9500; }
+  .star-hint { font-size: 11px; color: var(--secondary); text-align: right; margin-top: 6px; }
+
+  /* Student tabs */
+  .eval-student-tabs { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .eval-tab {
+    display: flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid #E8E8E8; border-radius: 10px;
+    padding: 8px 14px; font-size: 13px; color: var(--secondary);
+    cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  }
+  .eval-tab.active {
+    background: var(--primary); border-color: var(--primary); color: #fff;
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.25);
+  }
+  .eval-tab.active .stu-avatar { background: rgba(255,255,255,0.25); color: #fff; }
+  .eval-tab:active { transform: scale(0.97); }
+
+  /* Note textarea */
+  .form-item-custom { margin-bottom: 12px; }
+  .form-label-custom { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .note-textarea {
+    width: 100%; background: #F2F2F7; border: none; border-radius: 12px;
+    padding: 14px; font-size: 14px; color: var(--text); line-height: 1.6;
+    resize: none; font-family: inherit; box-sizing: border-box;
+  }
+  .note-textarea:focus { outline: none; background: #EBEBF0; }
+
+  /* Image upload grid */
+  .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .img-upload-cell { aspect-ratio: 1; border-radius: 10px; overflow: hidden; position: relative; background: #F2F2F7; }
+  .img-upload-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .img-upload-del {
+    position: absolute; top: 4px; right: 4px; width: 18px; height: 18px;
+    background: rgba(0,0,0,0.5); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #fff; cursor: pointer;
+  }
+  .img-upload-add {
+    aspect-ratio: 1; border-radius: 10px; border: 1.5px dashed #C7C7CC;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; background: #FAFAFA;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- SCREEN 1: Create Lesson — Multi-Select Students -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone" id="phone1">
+  <div class="nav">
+    <span class="nav-back" onclick="resetScreen1()">← 返回</span>
+    <span class="nav-title">新增课程</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <div class="segment">
+      <div class="seg-item active">单次课</div>
+      <div class="seg-item">周期课</div>
+    </div>
+    <div class="card">
+      <div class="form-row" onclick="showTeacherSheet()">
+        <span class="form-label">授课老师</span>
+        <span class="form-value">王老师 <span class="form-arrow">›</span></span>
+      </div>
+      <div class="form-row" onclick="showStudentSheet()">
+        <span class="form-label">选择学员</span>
+        <div class="student-row">
+          <div class="selected-chips" id="selectedChips">
+            <span class="chip" data-id="1">小明 <span class="chip-x" onclick="event.stopPropagation();removeStudent(1)">×</span></span>
+            <span class="chip" data-id="2">小红 <span class="chip-x" onclick="event.stopPropagation();removeStudent(2)">×</span></span>
+          </div>
+          <span class="chip-hint">已选 2 人，点击修改 ›</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">课程模板</span>
+        <span class="form-value">钢琴基础班 <span class="form-arrow">›</span></span>
+      </div>
+      <div class="form-row">
+        <span class="form-label">上课日期</span>
+        <span class="form-value">2026-07-18 <span class="form-arrow">›</span></span>
+      </div>
+      <div class="form-row" style="border-bottom:none;">
+        <span class="form-label">上课时间</span>
+        <span class="form-value">18:00 <span class="form-arrow">›</span></span>
+      </div>
+    </div>
+    <button class="btn-primary" id="submitBtn" onclick="toggleSubmitCount()">创建课程（2人）</button>
+  </div>
+
+  <!-- Student multi-select sheet -->
+  <div class="overlay" id="studentSheet">
+    <div class="sheet">
+      <div class="sheet-header">
+        <span class="sheet-cancel" onclick="hideStudentSheet()">取消</span>
+        <span class="sheet-title">选择学员（可多选）</span>
+        <span class="sheet-confirm" onclick="confirmStudentSelection()">确定</span>
+      </div>
+      <div class="sheet-list">
+        <div class="sheet-item" onclick="toggleSheetCheck(this, 1)">
+          <div class="sheet-check on"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">明</div>
+          <div>
+            <div class="sheet-student-name">小明</div>
+            <div class="sheet-student-meta">王老师 · 剩余 8 课时</div>
+          </div>
+        </div>
+        <div class="sheet-item" onclick="toggleSheetCheck(this, 2)">
+          <div class="sheet-check on"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">红</div>
+          <div>
+            <div class="sheet-student-name">小红</div>
+            <div class="sheet-student-meta">王老师 · 剩余 12 课时</div>
+          </div>
+        </div>
+        <div class="sheet-item" onclick="toggleSheetCheck(this, 3)">
+          <div class="sheet-check"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">刚</div>
+          <div>
+            <div class="sheet-student-name">小刚</div>
+            <div class="sheet-student-meta">王老师 · 剩余 3 课时</div>
+          </div>
+          <span class="sheet-item-tag warn">课时不足</span>
+        </div>
+        <div class="sheet-item" onclick="toggleSheetCheck(this, 4)">
+          <div class="sheet-check"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">丽</div>
+          <div>
+            <div class="sheet-student-name">小丽</div>
+            <div class="sheet-student-meta">张老师 · 剩余 20 课时</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 创建课程 — 学员多选。点击"选择学员"弹出底部面板，圆形复选框多选，显示归属老师和剩余课时。课时不足自动标橙色。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 2: Lesson Detail — All Scheduled -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone" id="phone2">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课程详情</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <div class="card">
+      <div class="lesson-info-top">
+        <span class="lesson-course-name">钢琴基础班</span>
+        <span class="lesson-edit">编辑</span>
+      </div>
+      <!-- Series progress card (matches real app lesson-detail) -->
+      <div class="progress-card-wrapper">
+        <div class="progress-card-top">
+          <span class="progress-card-label">单次课</span>
+          <span class="progress-card-value">第 1 / 1 节</span>
+        </div>
+        <div class="progress-card-track"><div class="progress-card-fill" style="width:0%;"></div></div>
+      </div>
+      <div class="lesson-status-row">
+        <span class="lesson-status-pill all-scheduled">
+          <span class="status-dot"></span> 待上课
+        </span>
+        <span class="lesson-status-sub">2 名学员均未签到</span>
+      </div>
+      <div class="lesson-time-box">
+        <div class="lesson-time-main">2026-07-18 周五 18:00–18:45</div>
+        <div class="lesson-time-sub">王老师 · 45分钟</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this.closest('.card'))">
+        <div class="card-title" style="margin-bottom:0;">学员签到</div>
+        <span class="section-arrow">▾</span>
+      </div>
+      <div class="checkin-progress">
+        <div class="checkin-progress-bar"><div class="checkin-progress-fill" id="progress2" style="width:0%;"></div></div>
+        <div class="checkin-progress-text" id="progressText2">0 / 2 已签到</div>
+      </div>
+      <div class="section-body">
+        <div class="student-cards" id="studentCards2">
+          <!-- Filled by JS -->
+        </div>
+        <div class="batch-hint">每位学员独立签到，互不影响</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom bar: each student has quick action -->
+  <div class="bottom-bar" id="bottomBar2">
+    <div class="bottom-btn bottom-btn-absent" onclick="batchAction(2, 'absent')">缺席</div>
+    <div class="bottom-btn bottom-btn-cancel" onclick="batchAction(2, 'cancel')">取消课程</div>
+    <div class="bottom-btn bottom-btn-primary" onclick="batchAction(2, 'complete')">签到完成</div>
+  </div>
+
+  <!-- Per-student confirmation dialog -->
+  <div class="dialog-overlay" id="dialog2">
+    <div class="dialog">
+      <div class="dialog-icon" id="dialogIcon2">✓</div>
+      <div class="dialog-title" id="dialogTitle2">确认签到</div>
+      <div class="dialog-body" id="dialogBody2">确认 <strong>小明</strong> 已完成本节课程？<br>将从其课时包扣减 1 课时。</div>
+      <div class="dialog-buttons">
+        <button class="dialog-btn dialog-btn-cancel" onclick="closeDialog(2)">取消</button>
+        <button class="dialog-btn dialog-btn-primary" id="dialogConfirm2" onclick="confirmDialog(2)">确认签到</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast2"></div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 课程详情 · 单次课 · 全部待签 — 进度卡片显示"单次课 第 1/1 节"。周期课则显示"周期课进度 第 3/8 节"，结构一致仅数据不同。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 2b: Single-Student Lesson — Same UI as Screen 2 -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课程详情</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <div class="card">
+      <div class="lesson-info-top">
+        <span class="lesson-course-name">钢琴基础班</span>
+        <span class="lesson-edit">编辑</span>
+      </div>
+      <div class="progress-card-wrapper">
+        <div class="progress-card-top">
+          <span class="progress-card-label">单次课</span>
+          <span class="progress-card-value">第 1 / 1 节</span>
+        </div>
+        <div class="progress-card-track"><div class="progress-card-fill" style="width:0%;"></div></div>
+      </div>
+      <div class="lesson-status-row">
+        <span class="lesson-status-pill all-scheduled"><span class="status-dot"></span> 待上课</span>
+        <span class="lesson-status-sub">1 名学员待签到</span>
+      </div>
+      <div class="lesson-time-box">
+        <div class="lesson-time-main">2026-07-18 周五 10:00–10:45</div>
+        <div class="lesson-time-sub">张老师 · 45分钟</div>
+      </div>
+    </div>
+
+    <!-- Same card structure as multi-student, just 1 row -->
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this.closest('.card'))">
+        <div class="card-title" style="margin-bottom:0;">学员签到</div>
+        <span class="section-arrow">▾</span>
+      </div>
+      <div class="checkin-progress">
+        <div class="checkin-progress-bar"><div class="checkin-progress-fill" style="width:0%;"></div></div>
+        <div class="checkin-progress-text">0 / 1 已签到</div>
+      </div>
+      <div class="section-body">
+        <div class="student-cards">
+          <div class="stu-card interactive">
+            <div class="stu-avatar">明</div>
+            <div class="stu-info">
+              <div class="stu-name">小明</div>
+              <div class="stu-meta">剩余 8 课时 · 钢琴基础包</div>
+            </div>
+            <span class="stu-badge scheduled">待签到</span>
+            <div class="stu-actions">
+              <button class="stu-btn stu-btn-done" onclick="singleCheckin('complete')">✓</button>
+              <button class="stu-btn stu-btn-absent" onclick="singleCheckin('absent')">!</button>
+            </div>
+          </div>
+        </div>
+        <div class="batch-hint">每位学员独立签到，互不影响</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Same 3-button bottom bar as multi-student -->
+  <div class="bottom-bar" id="phone2b-bar">
+    <div class="bottom-btn bottom-btn-absent" onclick="batchAction2b('absent')">缺席</div>
+    <div class="bottom-btn bottom-btn-cancel" onclick="batchAction2b('cancel')">取消课程</div>
+    <div class="bottom-btn bottom-btn-primary" onclick="batchAction2b('complete')">签到完成</div>
+  </div>
+  <!-- Confirmation dialog -->
+  <div class="dialog-overlay" id="dialog2b">
+    <div class="dialog">
+      <div class="dialog-icon" id="dialogIcon2b">✓</div>
+      <div class="dialog-title" id="dialogTitle2b">确认签到</div>
+      <div class="dialog-body" id="dialogBody2b">确认 <strong>小明</strong> 已完成本节课程？<br>将从其课时包扣减 <strong>1 课时</strong>。</div>
+      <div class="dialog-buttons">
+        <button class="dialog-btn dialog-btn-cancel" onclick="document.getElementById('dialog2b').classList.remove('show')">取消</button>
+        <button class="dialog-btn dialog-btn-primary" onclick="confirmDialog2b()">确认签到</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 单人课详情 — 与多人课完全相同的 UI 结构，只是学员卡片只有 1 张。进度条 0/1，底部栏三段式不变。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 3: Lesson Detail — Mixed State (1 done, 1 scheduled) -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone" id="phone3">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课程详情</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <div class="card">
+      <div class="lesson-info-top">
+        <span class="lesson-course-name">钢琴基础班</span>
+        <span class="lesson-edit">编辑</span>
+      </div>
+      <div class="progress-card-wrapper">
+        <div class="progress-card-top">
+          <span class="progress-card-label">单次课</span>
+          <span class="progress-card-value">第 1 / 1 节</span>
+        </div>
+        <div class="progress-card-track"><div class="progress-card-fill" style="width:0%;"></div></div>
+      </div>
+      <div class="lesson-status-row">
+        <span class="lesson-status-pill mixed">
+          <span class="status-dot"></span> 进行中
+        </span>
+        <span class="lesson-status-sub">1 人已完成 · 1 人待签到</span>
+      </div>
+      <div class="lesson-time-box">
+        <div class="lesson-time-main">2026-07-18 周五 18:00–18:45</div>
+        <div class="lesson-time-sub">王老师 · 45分钟</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this.closest('.card'))">
+        <div class="card-title" style="margin-bottom:0;">学员签到</div>
+        <span class="section-arrow">▾</span>
+      </div>
+      <div class="checkin-progress">
+        <div class="checkin-progress-bar"><div class="checkin-progress-fill" id="progress3" style="width:50%;"></div></div>
+        <div class="checkin-progress-text" id="progressText3">1 / 2 已签到</div>
+      </div>
+      <div class="section-body">
+        <div class="student-cards" id="studentCards3">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">课后评价</div>
+
+      <!-- 小明（已完成） -->
+      <div id="evalMing3" class="eval-student-card" style="border:1px solid #F0F0F0;border-radius:8px;">
+        <div class="eval-student-header" onclick="toggleEvalSection('evalMing3')">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="stu-avatar">明</div>
+            <div>
+              <div style="font-size:15px;font-weight:600;color:var(--text);">小明</div>
+              <div style="font-size:12px;color:#34C759;">已完成 · 已扣 1 课时</div>
+            </div>
+          </div>
+          <span class="eval-expand">▾</span>
+        </div>
+        <div class="eval-body">
+          <div class="eval-section">
+            <div class="eval-section-label">课后评分</div>
+            <div class="eval-empty">暂未评分</div>
+            <span class="eval-edit-link">去评分 ›</span>
+          </div>
+          <div class="eval-section">
+            <div class="eval-section-label">课后记录</div>
+            <div class="note-text">今天小明练习了拜厄第32首，右手节奏把握得不错。</div>
+            <div class="note-meta">王老师 · 2026-07-18 18:52</div>
+            <span class="eval-edit-link">编辑 ›</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:var(--secondary);text-align:center;padding-top:10px;">
+        待学员签到完成后可填写
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar" id="bottomBar3">
+    <div class="bottom-btn bottom-btn-absent" onclick="batchAction(3, 'absent')">缺席</div>
+    <div class="bottom-btn bottom-btn-cancel" onclick="batchAction(3, 'cancel')">取消课程</div>
+    <div class="bottom-btn bottom-btn-primary" onclick="batchAction(3, 'complete')">签到完成</div>
+  </div>
+
+  <div class="dialog-overlay" id="dialog3">
+    <div class="dialog">
+      <div class="dialog-icon" id="dialogIcon3">✓</div>
+      <div class="dialog-title" id="dialogTitle3">确认签到</div>
+      <div class="dialog-body" id="dialogBody3">确认 <strong>小红</strong> 已完成本节课程？<br>将从其课时包扣减 1 课时。</div>
+      <div class="dialog-buttons">
+        <button class="dialog-btn dialog-btn-cancel" onclick="closeDialog(3)">取消</button>
+        <button class="dialog-btn dialog-btn-primary" id="dialogConfirm3" onclick="confirmDialog(3)">确认签到</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast3"></div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 课程详情 · 混合状态 — 底部栏与 Screen 2 一致 [缺席] [取消] [签到完成]，确认弹窗列仅待签学员。全部签完后显示"已全部签到"。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ============================================================ -->
+<!-- SCREEN 4: Lesson Detail — All Completed + Per-Student Evaluation -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone" id="phone4">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课程详情</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <div class="card">
+      <div class="lesson-info-top">
+        <span class="lesson-course-name">钢琴基础班</span>
+      </div>
+      <div class="lesson-status-row">
+        <span class="lesson-status-pill all-done">
+          <span class="status-dot"></span> 已完成
+        </span>
+        <span class="lesson-status-sub">全部 2 名学员已完成</span>
+      </div>
+      <div class="lesson-time-box">
+        <div class="lesson-time-main">2026-07-18 周五 18:00–18:45</div>
+        <div class="lesson-time-sub">王老师 · 45分钟</div>
+      </div>
+    </div>
+
+    <!-- Check-in summary (collapsible, collapsed by default) -->
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this.closest('.card'))">
+        <div class="card-title" style="margin-bottom:0;">学员签到</div>
+        <span class="section-arrow collapsed">▾</span>
+      </div>
+      <div class="checkin-progress">
+        <div class="checkin-progress-bar"><div class="checkin-progress-fill" style="width:100%;background:#34C759;"></div></div>
+        <div class="checkin-progress-text" style="color:#34C759;">2 / 2 已签到</div>
+      </div>
+      <div class="section-body collapsed">
+        <div class="student-cards">
+          <div class="stu-card done"><div class="stu-avatar">明</div><div class="stu-info"><div class="stu-name">小明</div><div class="stu-meta">已扣 1 课时 · 剩余 7 课时</div></div><span class="stu-badge completed">已完成 ✓</span></div>
+          <div class="stu-card done"><div class="stu-avatar">红</div><div class="stu-info"><div class="stu-name">小红</div><div class="stu-meta">已扣 1 课时 · 剩余 11 课时</div></div><span class="stu-badge completed">已完成 ✓</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 课后评价 -->
+    <div class="card">
+      <div class="card-title">课后评价</div>
+        <!-- ===== 小明 ===== -->
+        <div id="evalMing" class="eval-student-card" style="border:1px solid #F0F0F0;border-radius:8px;margin-top:10px;">
+          <div class="eval-student-header" onclick="toggleEvalSection('evalMing')">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="stu-avatar">明</div>
+              <div>
+                <div style="font-size:15px;font-weight:600;color:var(--text);">小明</div>
+                <div style="font-size:12px;color:#34C759;">已完成 · 已扣 1 课时</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12px;color:#34C759;">已评价</span>
+              <span class="eval-expand">▾</span>
+            </div>
+          </div>
+          <div class="eval-body">
+            <div class="eval-section">
+              <div class="eval-section-label">课后评分</div>
+              <div class="eval-stars-row"><span class="eval-dim-label">专注度</span><span style="color:#FF9500;font-size:18px;">★★★★★</span></div>
+              <div class="eval-stars-row"><span class="eval-dim-label">完成度</span><span style="color:#FF9500;font-size:18px;">★★★★<span style="color:#C7C7CC;">★</span></span></div>
+              <div class="eval-stars-row"><span class="eval-dim-label">掌握度</span><span style="color:#FF9500;font-size:18px;">★★★<span style="color:#C7C7CC;">★★</span></span></div>
+              <span class="eval-edit-link" onclick="scrollToEvalNote('ming')">编辑评分 ›</span>
+            </div>
+            <div class="eval-section">
+              <div class="eval-section-label">课后记录</div>
+              <div class="note-text">拜厄第32首完成，右手节奏把握得不错，左手需要加强练习。下节课重点练习手指独立性。</div>
+              <div class="eval-edit-link">编辑记录 ›</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 小红 ===== -->
+        <div id="evalHong" class="eval-student-card" style="border:1px solid #F0F0F0;border-radius:8px;margin-top:8px;">
+          <div class="eval-student-header" onclick="toggleEvalSection('evalHong')">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="stu-avatar">红</div>
+              <div>
+                <div style="font-size:15px;font-weight:600;color:var(--text);">小红</div>
+                <div style="font-size:12px;color:#34C759;">已完成 · 已扣 1 课时</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12px;color:var(--secondary);">未评价</span>
+              <span class="eval-expand">▸</span>
+            </div>
+          </div>
+          <div class="eval-body" style="display:none;">
+            <div class="eval-section">
+              <div class="eval-section-label">课后评分</div>
+              <div class="eval-empty">暂未评分</div>
+              <span class="eval-edit-link">去评分 ›</span>
+            </div>
+            <div class="eval-section">
+              <div class="eval-section-label">课后记录</div>
+              <div class="eval-empty">暂未填写</div>
+              <span class="eval-edit-link">去填写 ›</span>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <!-- Status correction -->
+    <div class="card">
+      <div class="card-title">更改状态</div>
+      <div style="font-size:12px;color:var(--secondary);margin-bottom:10px;">选择学员后可更改其签到状态</div>
+      <div class="action-list-item" onclick="toggleCorrectStudent(this, 1)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="stu-avatar" style="width:28px;height:28px;font-size:11px;">明</div>
+          <span style="font-size:14px;color:#222;">小明</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="stu-badge completed" style="font-size:11px;">已完成</span>
+          <span class="form-arrow">›</span>
+        </div>
+      </div>
+      <div class="action-list-item" onclick="toggleCorrectStudent(this, 2)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="stu-avatar" style="width:28px;height:28px;font-size:11px;">红</div>
+          <span style="font-size:14px;color:#222;">小红</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="stu-badge completed" style="font-size:11px;">已完成</span>
+          <span class="form-arrow">›</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 课程详情 · 全部完成 — 每学员独立评价卡片（评分 + 记录），可折叠展开。小明已评价，小红待评价。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 4b: Per-Student Rating Edit — Inline Star Editor -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课后评分</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <!-- Student selector tab -->
+    <div class="eval-student-tabs">
+      <div class="eval-tab active" onclick="switchEvalTab(this, 0)">
+        <div class="stu-avatar" style="width:24px;height:24px;font-size:10px;">明</div>
+        <span>小明</span>
+        <span style="font-size:10px;color:#34C759;">已评</span>
+      </div>
+      <div class="eval-tab" onclick="document.getElementById('unsavedRating').classList.add('show')">
+        <div class="stu-avatar" style="width:24px;height:24px;font-size:10px;">红</div>
+        <span>小红</span>
+        <span style="font-size:10px;color:var(--secondary);">待评</span>
+      </div>
+      <div style="font-size:12px;color:var(--secondary);padding:8px 4px;">
+        左右滑动切换学员
+      </div>
+    </div>
+
+    <!-- Context bar -->
+    <div style="background:#E6F4FF;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--primary);">
+      小明 · 钢琴基础班 · 2026-07-18
+    </div>
+
+    <!-- Rating card for 小明 -->
+    <div class="card" id="ratingCard">
+      <div class="card-title">评分维度</div>
+      <div class="eval-stars-row interactive">
+        <span class="eval-dim-label">专注度</span>
+        <span class="eval-stars-editable" data-dim="专注度">
+          <span class="star-pick filled">★</span><span class="star-pick filled">★</span><span class="star-pick filled">★</span><span class="star-pick filled">★</span><span class="star-pick filled">★</span>
+        </span>
+      </div>
+      <div class="eval-stars-row interactive">
+        <span class="eval-dim-label">完成度</span>
+        <span class="eval-stars-editable" data-dim="完成度">
+          <span class="star-pick filled">★</span><span class="star-pick filled">★</span><span class="star-pick filled">★</span><span class="star-pick filled">★</span><span class="star-pick">★</span>
+        </span>
+      </div>
+      <div class="eval-stars-row interactive">
+        <span class="eval-dim-label">掌握度</span>
+        <span class="eval-stars-editable" data-dim="掌握度">
+          <span class="star-pick filled">★</span><span class="star-pick filled">★</span><span class="star-pick filled">★</span><span class="star-pick">★</span><span class="star-pick">★</span>
+        </span>
+      </div>
+      <div class="star-hint">点击星星评分</div>
+    </div>
+
+    <button class="btn-primary" onclick="this.textContent='已保存';this.style.background='#34C759';setTimeout(()=>{this.textContent='保存评分';this.style.background='var(--primary)';},1200)">保存评分</button>
+  </div>
+
+  <!-- Unsaved changes confirmation -->
+  <div class="dialog-overlay" id="unsavedRating">
+    <div class="dialog">
+      <div class="dialog-icon">⚠</div>
+      <div class="dialog-title">未保存的记录</div>
+      <div class="dialog-body">当前学员的评分尚未保存，<br>确定要切换学员吗？</div>
+      <div class="dialog-buttons">
+        <button class="dialog-btn dialog-btn-cancel" onclick="document.getElementById('unsavedRating').classList.remove('show')">取消</button>
+        <button class="dialog-btn dialog-btn-primary" onclick="document.getElementById('unsavedRating').classList.remove('show')">确定切换</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 编辑评分 — 顶部学员 Tab 切换，每人独立一套评分维度。切换学员时若未保存，弹窗提示。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 4c: Per-Student Note Edit — With Student Tab -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课后记录</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <!-- Student selector -->
+    <div class="eval-student-tabs">
+      <div class="eval-tab active">
+        <div class="stu-avatar" style="width:24px;height:24px;font-size:10px;">明</div>
+        <span>小明</span>
+      </div>
+      <div class="eval-tab" onclick="document.getElementById('unsavedNote').classList.add('show')">
+        <div class="stu-avatar" style="width:24px;height:24px;font-size:10px;">红</div>
+        <span>小红</span>
+      </div>
+    </div>
+
+    <div style="background:#E6F4FF;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--primary);">
+      小明 · 钢琴基础班 · 2026-07-18
+    </div>
+
+    <div class="card">
+      <div class="form-item-custom">
+        <div class="form-label-custom">课后记录</div>
+        <textarea class="note-textarea" rows="6">拜厄第32首完成，右手节奏把握得不错，左手需要加强练习。下节课重点练习手指独立性，建议回家每天练习10分钟音阶。</textarea>
+      </div>
+      <div style="font-size:11px;color:var(--secondary);text-align:right;">87 / 500字</div>
+    </div>
+
+    <!-- Image upload (unchanged from existing) -->
+    <div class="card">
+      <div class="form-label-custom" style="margin-bottom:8px;">上传图片 <span style="font-size:11px;color:var(--border);font-weight:normal;">（最多9张）</span></div>
+      <div class="img-upload-grid">
+        <div class="img-upload-cell"><div style="background:#D6E4F0;width:100%;height:100%;"></div><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-cell"><div style="background:#D6E4F0;width:100%;height:100%;"></div><div class="img-upload-del">✕</div></div>
+        <div class="img-upload-add"><div style="font-size:20px;color:#C7C7CC;">+</div><div style="font-size:10px;color:var(--border);margin-top:3px;">添加图片</div></div>
+      </div>
+    </div>
+
+    <button class="btn-primary">保存记录</button>
+  </div>
+
+  <!-- Unsaved changes confirmation -->
+  <div class="dialog-overlay" id="unsavedNote">
+    <div class="dialog">
+      <div class="dialog-icon">⚠</div>
+      <div class="dialog-title">未保存的记录</div>
+      <div class="dialog-body">当前学员的课后记录尚未保存，<br>确定要切换学员吗？</div>
+      <div class="dialog-buttons">
+        <button class="dialog-btn dialog-btn-cancel" onclick="document.getElementById('unsavedNote').classList.remove('show')">取消</button>
+        <button class="dialog-btn dialog-btn-primary" onclick="document.getElementById('unsavedNote').classList.remove('show')">确定切换</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 编辑课后记录 — 顶部学员 Tab 切换，每学员独立保存。切换学员时若未保存，弹窗提示。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 4d: Lesson Detail — All Absent -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课程详情</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <div class="card">
+      <div class="lesson-info-top">
+        <span class="lesson-course-name">钢琴基础班</span>
+        <span class="lesson-edit">编辑</span>
+      </div>
+      <div class="progress-card-wrapper completed">
+        <div class="progress-card-top">
+          <span class="progress-card-label">单次课</span>
+          <span class="progress-card-value">第 1 / 1 节</span>
+        </div>
+        <div class="progress-card-track"><div class="progress-card-fill" style="width:100%;"></div></div>
+      </div>
+      <div class="lesson-status-row">
+        <span class="lesson-status-pill" style="color:#FF9500;"><span class="status-dot"></span> 全部缺席</span>
+        <span class="lesson-status-sub">2 名学员均缺席</span>
+      </div>
+      <div class="lesson-time-box">
+        <div class="lesson-time-main">2026-07-18 周五 18:00–18:45</div>
+        <div class="lesson-time-sub">王老师 · 45分钟</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this.closest('.card'))">
+        <div class="card-title" style="margin-bottom:0;">学员签到</div>
+        <span class="section-arrow collapsed">▾</span>
+      </div>
+      <div class="checkin-progress">
+        <div class="checkin-progress-bar"><div class="checkin-progress-fill" style="width:100%;background:#FF9500;"></div></div>
+        <div class="checkin-progress-text" style="color:#FF9500;">2 / 2 缺席</div>
+      </div>
+      <div class="section-body collapsed">
+        <div class="student-cards">
+          <div class="stu-card done"><div class="stu-avatar">明</div><div class="stu-info"><div class="stu-name">小明</div><div class="stu-meta">已扣 1 课时 · 剩余 7 课时</div></div><span class="stu-badge absent">已缺席</span></div>
+          <div class="stu-card done"><div class="stu-avatar">红</div><div class="stu-info"><div class="stu-name">小红</div><div class="stu-meta">已扣 1 课时 · 剩余 11 课时</div></div><span class="stu-badge absent">已缺席</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">更改状态</div>
+      <div class="action-list-item">
+        <div style="display:flex;align-items:center;gap:10px;"><div class="stu-avatar" style="width:28px;height:28px;font-size:11px;">明</div><span style="font-size:14px;color:#222;">小明</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><span class="stu-badge absent" style="font-size:11px;">已缺席</span><span class="form-arrow">›</span></div>
+      </div>
+      <div class="action-list-item">
+        <div style="display:flex;align-items:center;gap:10px;"><div class="stu-avatar" style="width:28px;height:28px;font-size:11px;">红</div><span style="font-size:14px;color:#222;">小红</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><span class="stu-badge absent" style="font-size:11px;">已缺席</span><span class="form-arrow">›</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 全部缺席 — 进度条橙色，不显示评价卡片。可逐个纠正为已完成。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 4e: Single Student — Completed + Evaluation -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课程详情</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <div class="card">
+      <div class="lesson-info-top">
+        <span class="lesson-course-name">钢琴基础班</span>
+      </div>
+      <div class="progress-card-wrapper completed">
+        <div class="progress-card-top">
+          <span class="progress-card-label">单次课</span>
+          <span class="progress-card-value">第 1 / 1 节</span>
+        </div>
+        <div class="progress-card-track"><div class="progress-card-fill" style="width:100%;"></div></div>
+      </div>
+      <div class="lesson-status-row">
+        <span class="lesson-status-pill all-done"><span class="status-dot"></span> 已完成</span>
+        <span class="lesson-status-sub">学员已完成签到</span>
+      </div>
+      <div class="lesson-time-box">
+        <div class="lesson-time-main">2026-07-18 周五 10:00–10:45</div>
+        <div class="lesson-time-sub">张老师 · 45分钟</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this.closest('.card'))">
+        <div class="card-title" style="margin-bottom:0;">学员签到</div>
+        <span class="section-arrow collapsed">▾</span>
+      </div>
+      <div class="checkin-progress">
+        <div class="checkin-progress-bar"><div class="checkin-progress-fill" style="width:100%;background:#34C759;"></div></div>
+        <div class="checkin-progress-text" style="color:#34C759;">1 / 1 已签到</div>
+      </div>
+      <div class="section-body collapsed">
+        <div class="stu-card done"><div class="stu-avatar">明</div><div class="stu-info"><div class="stu-name">小明</div><div class="stu-meta">已扣 1 课时 · 剩余 7 课时</div></div><span class="stu-badge completed">已完成 ✓</span></div>
+      </div>
+    </div>
+
+    <!-- 课后评价 -->
+    <div class="card">
+      <div class="card-title">课后评价</div>
+        <div id="evalMingSingle" class="eval-student-card" style="border:1px solid #F0F0F0;border-radius:8px;">
+          <div class="eval-student-header" onclick="toggleEvalSection('evalMingSingle')">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="stu-avatar">明</div>
+              <div><div style="font-size:15px;font-weight:600;color:var(--text);">小明</div><div style="font-size:12px;color:#34C759;">已完成 · 已扣 1 课时</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#34C759;">已评价</span><span class="eval-expand">▾</span></div>
+          </div>
+          <div class="eval-body">
+            <div class="eval-section">
+              <div class="eval-section-label">课后评分</div>
+              <div class="eval-stars-row"><span class="eval-dim-label">专注度</span><span style="color:#FF9500;font-size:18px;">★★★★★</span></div>
+              <div class="eval-stars-row"><span class="eval-dim-label">完成度</span><span style="color:#FF9500;font-size:18px;">★★★★</span><span style="color:#C7C7CC;font-size:18px;">★</span></div>
+              <div class="eval-stars-row"><span class="eval-dim-label">掌握度</span><span style="color:#FF9500;font-size:18px;">★★★</span><span style="color:#C7C7CC;font-size:18px;">★★</span></div>
+            </div>
+            <div class="eval-section">
+              <div class="eval-section-label">课后记录</div>
+              <div class="note-text">拜厄第32首完成，右手节奏把握得不错，左手需要加强练习。</div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">更改状态</div>
+      <div class="action-list-item">
+        <div style="display:flex;align-items:center;gap:10px;"><div class="stu-avatar" style="width:28px;height:28px;font-size:11px;">明</div><span style="font-size:14px;color:#222;">小明</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><span class="stu-badge completed" style="font-size:11px;">已完成</span><span class="form-arrow">›</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 单人课已完成 — 与多人课完全相同的 UI 结构。评价卡片只有 1 张，其余一模一样。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 4f: Series Lesson Detail — Period-Class Progress -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课程详情</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <div class="card">
+      <div class="lesson-info-top">
+        <span class="lesson-course-name">钢琴基础班</span>
+        <span class="lesson-edit">编辑</span>
+      </div>
+      <!-- 周期课进度 — 与单次课相同的组件，仅数据不同 -->
+      <div class="progress-card-wrapper">
+        <div class="progress-card-top">
+          <span class="progress-card-label">周期课进度</span>
+          <span class="progress-card-value">第 3 / 8 节</span>
+        </div>
+        <div class="progress-card-track"><div class="progress-card-fill" style="width:37.5%;"></div></div>
+      </div>
+      <div class="lesson-status-row">
+        <span class="lesson-status-pill all-scheduled"><span class="status-dot"></span> 待上课</span>
+        <span class="lesson-status-sub">2 名学员均未签到</span>
+      </div>
+      <div class="lesson-time-box">
+        <div class="lesson-time-main">2026-07-18 周五 18:00–18:45</div>
+        <div class="lesson-time-sub">王老师 · 45分钟</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this.closest('.card'))">
+        <div class="card-title" style="margin-bottom:0;">学员签到</div>
+        <span class="section-arrow">▾</span>
+      </div>
+      <div class="checkin-progress">
+        <div class="checkin-progress-bar"><div class="checkin-progress-fill" style="width:0%;"></div></div>
+        <div class="checkin-progress-text">0 / 2 已签到</div>
+      </div>
+      <div class="section-body">
+        <div class="student-cards">
+          <div class="stu-card interactive">
+            <div class="stu-avatar">明</div><div class="stu-info"><div class="stu-name">小明</div><div class="stu-meta">剩余 8 课时 · 钢琴基础包</div></div>
+            <span class="stu-badge scheduled">待签到</span>
+            <div class="stu-actions"><button class="stu-btn stu-btn-done">✓</button><button class="stu-btn stu-btn-absent">!</button></div>
+          </div>
+          <div class="stu-card interactive">
+            <div class="stu-avatar">红</div><div class="stu-info"><div class="stu-name">小红</div><div class="stu-meta">剩余 12 课时 · 钢琴进阶包</div></div>
+            <span class="stu-badge scheduled">待签到</span>
+            <div class="stu-actions"><button class="stu-btn stu-btn-done">✓</button><button class="stu-btn stu-btn-absent">!</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 周期课特有操作 -->
+    <div class="card">
+      <div class="card-title" style="font-size:13px;color:var(--secondary);">周期课操作</div>
+      <div class="action-list-item"><span>仅取消本节课</span><span class="form-arrow">›</span></div>
+      <div class="action-list-item"><span>取消本节及后续所有课</span><span class="form-arrow">›</span></div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="bottom-btn bottom-btn-absent">缺席</div>
+    <div class="bottom-btn bottom-btn-cancel">取消课程</div>
+    <div class="bottom-btn bottom-btn-primary">签到完成</div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 周期课详情 — 进度卡显示"周期课进度 第3/8节"+ 37.5% 进度条。底部周期课操作（仅取消本节/取消本节及后续）。其余与单次课一致。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 1b: Edit Lesson — Locked Students -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">编辑课程</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <div class="card">
+      <div class="form-row">
+        <span class="form-label">授课老师</span>
+        <span class="form-value">王老师 <span class="form-arrow">›</span></span>
+      </div>
+      <div class="form-row" onclick="document.getElementById('editSheet').classList.add('show')">
+        <span class="form-label">选择学员</span>
+        <div class="student-row">
+          <div class="selected-chips">
+            <span class="chip">小明 <span style="font-size:10px;color:#34C759;">已签到</span></span>
+            <span class="chip">小红 <span class="chip-x">×</span></span>
+          </div>
+          <span class="chip-hint">已签学员不可移除，点击修改待签学员 ›</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">课程模板</span>
+        <span class="form-value">钢琴基础班 <span class="form-arrow">›</span></span>
+      </div>
+      <div class="form-row">
+        <span class="form-label">上课日期</span>
+        <span class="form-value">2026-07-18 <span class="form-arrow">›</span></span>
+      </div>
+      <div class="form-row" style="border-bottom:none;">
+        <span class="form-label">上课时间</span>
+        <span class="form-value">18:00 <span class="form-arrow">›</span></span>
+      </div>
+    </div>
+    <button class="btn-primary">保存修改</button>
+  </div>
+
+  <!-- Student edit sheet: 小明 locked, 小红 can be removed, others can be added -->
+  <div class="overlay" id="editSheet">
+    <div class="sheet">
+      <div class="sheet-header">
+        <span class="sheet-cancel" onclick="document.getElementById('editSheet').classList.remove('show')">取消</span>
+        <span class="sheet-title">选择学员（已签锁定）</span>
+        <span class="sheet-confirm" onclick="document.getElementById('editSheet').classList.remove('show')">确定</span>
+      </div>
+      <div class="sheet-list">
+        <div class="sheet-item" style="opacity:0.55;pointer-events:none;">
+          <div class="sheet-check on"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">明</div>
+          <div><div class="sheet-student-name">小明</div><div class="sheet-student-meta">已签到 · 不可移除</div></div>
+          <span style="font-size:10px;color:#34C759;margin-left:auto;">🔒</span>
+        </div>
+        <div class="sheet-item">
+          <div class="sheet-check on"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">红</div>
+          <div><div class="sheet-student-name">小红</div><div class="sheet-student-meta">王老师 · 剩余 12 课时</div></div>
+        </div>
+        <div class="sheet-item">
+          <div class="sheet-check"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">刚</div>
+          <div><div class="sheet-student-name">小刚</div><div class="sheet-student-meta">王老师 · 剩余 3 课时</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 编辑课程 — 已签到学员（小明）灰色锁定不可移除，待签学员（小红）可取消勾选，未选学员可新增。仅待签学员可变。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 5: Schedule List — Multi-student entries -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课表</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body scrollable">
+    <!-- Calendar week strip (matches app: borderless cards, active=primary fill) -->
+    <div style="display:flex;gap:3px;margin-bottom:12px;">
+      <div style="flex:1;text-align:center;padding:6px 2px;border-radius:6px;background:#fff;font-size:10px;color:#999;"><div>一</div><div style="font-size:13px;font-weight:700;color:#333;">14</div></div>
+      <div style="flex:1;text-align:center;padding:6px 2px;border-radius:6px;background:#fff;font-size:10px;color:#999;"><div>二</div><div style="font-size:13px;font-weight:700;color:#333;">15</div></div>
+      <div style="flex:1;text-align:center;padding:6px 2px;border-radius:6px;background:#fff;font-size:10px;color:#999;"><div>三</div><div style="font-size:13px;font-weight:700;color:#333;">16</div></div>
+      <div style="flex:1;text-align:center;padding:6px 2px;border-radius:6px;background:#fff;font-size:10px;color:#999;"><div>四</div><div style="font-size:13px;font-weight:700;color:#333;">17</div></div>
+      <div style="flex:1;text-align:center;padding:6px 2px;border-radius:6px;background:var(--primary);font-size:10px;color:rgba(255,255,255,0.7);"><div>五</div><div style="font-size:13px;font-weight:700;color:#fff;">18</div><div style="width:4px;height:4px;background:#fff;border-radius:50%;margin:2px auto 0;"></div></div>
+      <div style="flex:1;text-align:center;padding:6px 2px;border-radius:6px;background:#fff;font-size:10px;color:#999;"><div>六</div><div style="font-size:13px;font-weight:700;color:#333;">19</div></div>
+      <div style="flex:1;text-align:center;padding:6px 2px;border-radius:6px;background:#fff;font-size:10px;color:#999;"><div>日</div><div style="font-size:13px;font-weight:700;color:#333;">20</div></div>
+    </div>
+
+    <!-- Multi-student lesson — in progress (2人) -->
+    <div class="lesson-block mixed">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <div class="avatar-group">
+          <div class="stu-avatar">明</div>
+          <div class="stu-avatar">红</div>
+        </div>
+        <div class="lb-title" style="flex:1;">钢琴基础班</div>
+        <span style="font-size:11px;color:var(--secondary);flex-shrink:0;">2人</span>
+      </div>
+      <div class="lb-meta">18:00–18:45 · 王老师 · 45分钟</div>
+      <span class="lb-progress-tag in-progress">⏳ 1/2 已签到</span>
+    </div>
+
+    <!-- Multi-student lesson — all done (2人) -->
+    <div class="lesson-block done">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <div class="avatar-group">
+          <div class="stu-avatar">刚</div>
+          <div class="stu-avatar">丽</div>
+        </div>
+        <div class="lb-title" style="flex:1;">钢琴进阶课</div>
+        <span style="font-size:11px;color:var(--secondary);flex-shrink:0;">2人</span>
+      </div>
+      <div class="lb-meta">16:00–16:45 · 王老师 · 45分钟</div>
+      <span class="lb-progress-tag done">✓ 2/2 已完成</span>
+    </div>
+
+    <!-- Multi-student lesson — 5人 (shows it scales) -->
+    <div class="lesson-block mixed">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <div class="avatar-group">
+          <div class="stu-avatar">明</div>
+          <div class="stu-avatar">红</div>
+          <div class="stu-avatar">刚</div>
+          <div class="stu-avatar" style="background:var(--highlight-bg);color:var(--secondary);font-size:9px;">+2</div>
+        </div>
+        <div class="lb-title" style="flex:1;">钢琴集体课</div>
+        <span style="font-size:11px;color:var(--secondary);flex-shrink:0;">5人</span>
+      </div>
+      <div class="lb-meta">14:00–14:45 · 王老师 · 45分钟</div>
+      <span class="lb-progress-tag in-progress">⏳ 2/5 已签到</span>
+    </div>
+
+    <!-- Single-student lesson -->
+    <div class="lesson-block">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <div class="stu-avatar" style="width:28px;height:28px;font-size:11px;">明</div>
+        <div class="lb-title">小明 · 钢琴基础班</div>
+      </div>
+      <div class="lb-meta">10:00–10:45 · 张老师 · 45分钟</div>
+    </div>
+  </div>
+  <!-- FAB (matches existing app schedule page) -->
+  <div style="position:absolute;bottom:20px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(var(--primary-rgb),0.35);cursor:pointer;z-index:5;">+</div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-changed">CHANGED</span> 课表列表 — 多人课标题仅显示课程名 + 人数badge，头像叠放（最多3个 + +N）。单人课保持"学员·课程"不变。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 6: Student Correct Sheet (per-student status fix) -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone" style="position:relative;">
+  <div class="overlay show">
+    <div class="sheet">
+      <div class="sheet-header">
+        <span class="sheet-cancel">取消</span>
+        <span class="sheet-title">更改小明签到状态</span>
+        <span></span>
+      </div>
+      <div style="padding:0 20px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 0;">
+          <div class="stu-avatar">明</div>
+          <div>
+            <div style="font-size:15px;font-weight:600;">小明</div>
+            <div style="font-size:12px;color:var(--secondary);">当前：已完成 · 已扣 1 课时</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 20px;">
+        <div class="action-list-item" style="color:#34C759;font-weight:500;">
+          <span>✓ 标记为已完成</span>
+          <span class="form-arrow" style="color:#34C759;">›</span>
+        </div>
+        <div class="action-list-item" style="color:#FF9500;font-weight:500;">
+          <span>! 标记为缺席（退回课时）</span>
+          <span class="form-arrow" style="color:#FF9500;">›</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">课程详情</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="lesson-info-top"><span class="lesson-course-name">钢琴基础班</span></div>
+      <div class="lesson-status-row">
+        <span class="lesson-status-pill all-done"><span class="status-dot"></span> 已完成</span>
+        <span class="lesson-status-sub">全部 2 名学员已完成</span>
+      </div>
+      <div class="lesson-time-box">
+        <div class="lesson-time-main">2026-07-18 周五 18:00–18:45</div>
+        <div class="lesson-time-sub">王老师 · 45分钟</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">更改状态</div>
+      <div class="action-list-item">
+        <div style="display:flex;align-items:center;gap:10px;"><div class="stu-avatar" style="width:28px;height:28px;font-size:11px;">明</div><span style="font-size:14px;color:#222;">小明</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><span class="stu-badge completed" style="font-size:11px;">已完成</span><span class="form-arrow">›</span></div>
+      </div>
+      <div class="action-list-item">
+        <div style="display:flex;align-items:center;gap:10px;"><div class="stu-avatar" style="width:28px;height:28px;font-size:11px;">红</div><span style="font-size:14px;color:#222;">小红</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><span class="stu-badge completed" style="font-size:11px;">已完成</span><span class="form-arrow">›</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 状态纠正 — 仅两种操作：标记已完成 / 标记缺席。移除学员走编辑课程。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 7: Empty state — no students selected -->
+<!-- ============================================================ -->
+<div class="phone-wrap">
+<div class="phone">
+  <div class="nav">
+    <span class="nav-back">← 返回</span>
+    <span class="nav-title">新增课程</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="body">
+    <div class="segment">
+      <div class="seg-item active">单次课</div>
+      <div class="seg-item">周期课</div>
+    </div>
+    <div class="card">
+      <div class="form-row" onclick="document.getElementById('emptySheet').classList.add('show')">
+        <span class="form-label">选择学员</span>
+        <span class="form-value"><span class="form-placeholder">请选择学员</span> <span class="form-arrow">›</span></span>
+      </div>
+      <div class="form-row">
+        <span class="form-label">课程模板</span>
+        <span class="form-value"><span class="form-placeholder">请选择课程</span> <span class="form-arrow">›</span></span>
+      </div>
+      <div class="form-row">
+        <span class="form-label">上课日期</span>
+        <span class="form-value"><span class="form-placeholder">请选择日期</span> <span class="form-arrow">›</span></span>
+      </div>
+      <div class="form-row" style="border-bottom:none;">
+        <span class="form-label">上课时间</span>
+        <span class="form-value"><span class="form-placeholder">请选择时间</span> <span class="form-arrow">›</span></span>
+      </div>
+    </div>
+    <button class="btn-primary" style="opacity:0.4;pointer-events:none;">请先选择学员</button>
+  </div>
+
+  <div class="overlay" id="emptySheet">
+    <div class="sheet">
+      <div class="sheet-header">
+        <span class="sheet-cancel" onclick="document.getElementById('emptySheet').classList.remove('show')">取消</span>
+        <span class="sheet-title">选择学员（可多选）</span>
+        <span class="sheet-confirm" style="opacity:0.4;">确定</span>
+      </div>
+      <div class="sheet-list">
+        <div class="sheet-item" onclick="this.querySelector('.sheet-check').classList.toggle('on')">
+          <div class="sheet-check"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">明</div>
+          <div><div class="sheet-student-name">小明</div><div class="sheet-student-meta">王老师 · 剩余 8 课时</div></div>
+        </div>
+        <div class="sheet-item" onclick="this.querySelector('.sheet-check').classList.toggle('on')">
+          <div class="sheet-check"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">红</div>
+          <div><div class="sheet-student-name">小红</div><div class="sheet-student-meta">王老师 · 剩余 12 课时</div></div>
+        </div>
+        <div class="sheet-item" onclick="this.querySelector('.sheet-check').classList.toggle('on')">
+          <div class="sheet-check"></div>
+          <div class="stu-avatar" style="width:32px;height:32px;font-size:12px;">刚</div>
+          <div><div class="sheet-student-name">小刚</div><div class="sheet-student-meta">王老师 · 剩余 3 课时</div></div>
+          <span class="sheet-item-tag warn">课时不足</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">
+  <span class="tag tag-new">NEW</span> 空状态 — 未选学员时按钮置灰显示"请先选择学员"，确定按钮在选择为空时半透明。
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- LEGEND -->
+<!-- ============================================================ -->
+<div style="width:320px;flex-shrink:0;">
+  <div class="card" style="position:sticky;top:40px;font-size:14px;line-height:1.8;">
+    <div class="card-title" style="font-size:17px;">交互演示说明</div>
+
+    <div style="margin-bottom:12px;font-size:13px;color:var(--secondary);line-height:1.7;">
+      <b style="color:var(--text);">已对齐的设计决策：</b><br>
+      <span style="color:var(--green);">●</span> Badge：统一 #F2F2F7 灰底 + 颜色文字<br>
+      <span style="color:var(--green);">●</span> 按钮：80rpx 胶囊形 (pill shape)<br>
+      <span style="color:var(--green);">●</span> 导航栏：微信原生（白底黑字）<br>
+      <span style="color:var(--green);">●</span> 头像：有图用图，无图用字母兜底<br>
+      <span style="color:var(--green);">●</span> 评价编辑：独立编辑页 + 学员Tab<br>
+      <span style="color:var(--green);">●</span> 页面背景：#F2F2F7<br>
+      <span style="color:var(--green);">●</span> 评价卡片：每学员独立可折叠卡片<br>
+      <span style="color:var(--green);">●</span> 收折：学员签到 + 课后评价均支持收折<br>
+      <span style="color:var(--green);">●</span> 课程名：14px bold 与卡片标题统一<br>
+      <span style="color:var(--green);">●</span> 弹窗/Toast：van-dialog / van-toast<br>
+      <span style="color:var(--green);">●</span> 课表：叠头像 + 签到进度标签<br>
+      <span style="color:var(--green);">●</span> 次级按钮：#F2F2F7 灰底填充<br>
+      <span style="color:var(--green);">●</span> 卡片圆角：16rpx (8px)<br>
+      <span style="color:var(--green);">●</span> 底部栏：fixed + safe-area<br>
+      <span style="color:var(--green);">●</span> Segmented control bg：#F2F2F7<br>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--highlight-bg);margin:12px 0;">
+
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 1</b> <span style="font-size:12px;color:var(--secondary);">创建课程（多选学员）</span><br>
+      <span style="color:var(--secondary);">van-popup + checkbox-group 多选学员</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 1b</b> <span style="font-size:12px;color:var(--secondary);">编辑课程</span><br>
+      <span style="color:var(--secondary);">已签到学员🔒锁定不可移除</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 2</b> <span style="font-size:12px;color:var(--secondary);">全部待签（多人）</span><br>
+      <span style="color:var(--secondary);">学员签到支持收折，默认展开。<br>每学员 ✓/! 按钮，底部栏统一三段式。</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 2b</b> <span style="font-size:12px;color:var(--secondary);">全部待签（单人）</span><br>
+      <span style="color:var(--secondary);">与 Screen 2 相同结构，仅 1 张学员卡片，同样支持收折。</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 3</b> <span style="font-size:12px;color:var(--secondary);">混合状态</span><br>
+      <span style="color:var(--secondary);">1 完成 1 待签。课后评价与 Screen 4 统一卡片结构。</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 4</b> <span style="font-size:12px;color:var(--secondary);">全部完成+评价（多人）</span><br>
+      <span style="color:var(--secondary);">签到详情默认收起。课后评价统一归类卡片，支持收折。<br>每学员评分+记录可独立展开。</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 4b</b> <span style="font-size:12px;color:var(--secondary);">编辑评分</span><br>
+      <span style="color:var(--secondary);">学员 Tab 切换，独立评分维度，星星可交互</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 4c</b> <span style="font-size:12px;color:var(--secondary);">编辑课后记录</span><br>
+      <span style="color:var(--secondary);">学员 Tab + 快捷跳转，每学员独立保存</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 4d</b> <span style="font-size:12px;color:var(--secondary);">全部缺席</span><br>
+      <span style="color:var(--secondary);">进度橙色，无评价卡片，可逐个纠正</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 4e</b> <span style="font-size:12px;color:var(--secondary);">单人课已完成</span><br>
+      <span style="color:var(--secondary);">单人课=多人课特例，仅 1 张评价卡</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 4f</b> <span style="font-size:12px;color:var(--secondary);">周期课详情</span><br>
+      <span style="color:var(--secondary);">进度卡显示"周期课进度 第3/8节"</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 5</b> <span style="font-size:12px;color:var(--secondary);">课表列表</span><br>
+      <span style="color:var(--secondary);">叠头像 + 签到进度标签（⏳/✓）+ FAB 按钮</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 6</b> <span style="font-size:12px;color:var(--secondary);">状态纠正</span><br>
+      <span style="color:var(--secondary);">选中学员 → van-action-sheet → 仅改该学员</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <b style="color:#222;">Screen 7</b> <span style="font-size:12px;color:var(--secondary);">空状态</span><br>
+      <span style="color:var(--secondary);">无选择时按钮 disabled，弹窗确定半透明</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ SCREEN 1: Student Multi-Select ============
+let selectedStudents = new Set([1, 2]);
+
+function showStudentSheet() {
+  document.getElementById('studentSheet').classList.add('show');
+}
+
+function hideStudentSheet() {
+  document.getElementById('studentSheet').classList.remove('show');
+}
+
+function toggleSheetCheck(item, id) {
+  const check = item.querySelector('.sheet-check');
+  check.classList.toggle('on');
+  if (check.classList.contains('on')) {
+    selectedStudents.add(id);
+  } else {
+    selectedStudents.delete(id);
+  }
+}
+
+function confirmStudentSelection() {
+  const chips = document.getElementById('selectedChips');
+  const names = {1:'小明', 2:'小红', 3:'小刚', 4:'小丽'};
+  const avatars = {1:'明', 2:'红', 3:'刚', 4:'丽'};
+  let html = '';
+  selectedStudents.forEach(id => {
+    html += `<span class="chip" data-id="${id}">${names[id]} <span class="chip-x" onclick="event.stopPropagation();removeStudent(${id})">×</span></span>`;
+  });
+  chips.innerHTML = html || '<span style="font-size:13px;color:#C7C7CC;">请选择学员</span>';
+  const hint = chips.parentElement.querySelector('.chip-hint');
+  const count = selectedStudents.size;
+  hint.textContent = count > 0 ? `已选 ${count} 人，点击修改 ›` : '请选择学员 ›';
+  hint.style.color = count > 0 ? 'var(--primary)' : '#C7C7CC';
+  document.getElementById('submitBtn').textContent = count > 0 ? `创建课程（${count}人）` : '请先选择学员';
+  document.getElementById('submitBtn').style.opacity = count > 0 ? '1' : '0.4';
+  document.getElementById('submitBtn').style.pointerEvents = count > 0 ? 'auto' : 'none';
+  hideStudentSheet();
+}
+
+function removeStudent(id) {
+  selectedStudents.delete(id);
+  confirmStudentSelection();
+  // Also update sheet checkboxes
+  const sheet = document.getElementById('studentSheet');
+  const items = sheet.querySelectorAll('.sheet-item');
+  items.forEach(item => {
+    const check = item.querySelector('.sheet-check');
+    const hasOn = check.classList.contains('on');
+    // We'd need to map IDs, but for demo just rebuild
+  });
+}
+
+function showTeacherSheet() {}
+
+function toggleSubmitCount() {
+  const btn = document.getElementById('submitBtn');
+  const count = selectedStudents.size;
+  if (count === 0) return;
+  btn.textContent = '提交中…';
+  btn.style.opacity = '0.6';
+  setTimeout(() => {
+    btn.textContent = `创建课程（${count}人）`;
+    btn.style.opacity = '1';
+  }, 800);
+}
+
+function resetScreen1() {
+  selectedStudents = new Set([1, 2]);
+  confirmStudentSelection();
+  hideStudentSheet();
+}
+
+// ============ SCREEN 2: Interactive Check-in ============
+const students2 = [
+  { id: 1, name: '小明', avatar: '明', remaining: 8, pkg: '钢琴基础包', status: 'scheduled' },
+  { id: 2, name: '小红', avatar: '红', remaining: 12, pkg: '钢琴进阶包', status: 'scheduled' },
+];
+let screen2State = JSON.parse(JSON.stringify(students2));
+let pendingAction2 = null;
+
+function renderStudents2() {
+  const container = document.getElementById('studentCards2');
+  let html = '';
+  screen2State.forEach(s => {
+    const isDone = s.status === 'completed';
+    const isAbsent = s.status === 'absent';
+    const done = isDone || isAbsent;
+    const badgeClass = isDone ? 'completed' : (isAbsent ? 'absent' : 'scheduled');
+    const badgeText = isDone ? '已完成 ✓' : (isAbsent ? '已缺席' : '待签到');
+    const actionsHtml = !done ? `
+      <div class="stu-actions">
+        <button class="stu-btn stu-btn-done" onclick="event.stopPropagation();openDialog(2, ${s.id}, 'complete')" title="签到完成">✓</button>
+        <button class="stu-btn stu-btn-absent" onclick="event.stopPropagation();openDialog(2, ${s.id}, 'absent')" title="标记缺席">!</button>
+      </div>` : '';
+    html += `
+      <div class="stu-card ${done ? 'done' : 'interactive'}" data-sid="${s.id}">
+        <div class="stu-avatar">${s.avatar}</div>
+        <div class="stu-info">
+          <div class="stu-name">${s.name}</div>
+          <div class="stu-meta">${isDone ? '已扣 1 课时 · ' : ''}剩余 ${s.remaining} 课时 · ${s.pkg}</div>
+        </div>
+        <span class="stu-badge ${badgeClass}">${badgeText}</span>
+        ${actionsHtml}
+      </div>`;
+  });
+  container.innerHTML = html;
+  updateProgress2();
+  updateLessonStatus2();
+  updateBottomBar2();
+}
+
+function updateProgress2() {
+  const done = screen2State.filter(s => s.status === 'completed' || s.status === 'absent').length;
+  const total = screen2State.length;
+  const pct = (done / total) * 100;
+  document.getElementById('progress2').style.width = pct + '%';
+  document.getElementById('progressText2').textContent = `${done} / ${total} 已签到`;
+}
+
+function updateLessonStatus2() {
+  const done = screen2State.filter(s => s.status === 'completed' || s.status === 'absent').length;
+  const total = screen2State.length;
+  const phone = document.getElementById('phone2');
+  const pill = phone.querySelector('.lesson-status-pill');
+  const sub = phone.querySelector('.lesson-status-sub');
+  const pw = phone.querySelector('.progress-card-wrapper');
+  const fill = phone.querySelector('.progress-card-fill');
+  pill.classList.remove('all-scheduled', 'mixed', 'all-done');
+  if (done === 0) {
+    pill.classList.add('all-scheduled');
+    pill.innerHTML = '<span class="status-dot"></span> 待上课';
+    sub.textContent = `${total} 名学员均未签到`;
+    pw.classList.remove('completed');
+    if (fill) fill.style.width = '0%';
+  } else if (done === total) {
+    pill.classList.add('all-done');
+    pill.innerHTML = '<span class="status-dot"></span> 已完成';
+    sub.textContent = `全部 ${total} 名学员已完成`;
+    pw.classList.add('completed');
+    if (fill) fill.style.width = '100%';
+  } else {
+    pill.classList.add('mixed');
+    pill.innerHTML = '<span class="status-dot"></span> 进行中';
+    sub.textContent = `${done} 人已完成 · ${total - done} 人待签到`;
+    if (fill) fill.style.width = (done / total * 100) + '%';
+  }
+}
+
+function updateBottomBar2() {
+  const bar = document.getElementById('bottomBar2');
+  const pending = screen2State.filter(s => s.status === 'scheduled');
+  if (pending.length === 0) {
+    bar.innerHTML = '<div style="text-align:center;width:100%;font-size:13px;color:var(--secondary);">全部学员已签到</div>';
+    return;
+  }
+  // Consistent 3-button layout regardless of pending count
+  bar.innerHTML = `
+    <div class="bottom-btn bottom-btn-absent" onclick="batchAction(2, 'absent')">缺席</div>
+    <div class="bottom-btn bottom-btn-cancel" onclick="batchAction(2, 'cancel')">取消课程</div>
+    <div class="bottom-btn bottom-btn-primary" onclick="batchAction(2, 'complete')">签到完成</div>
+  `;
+}
+
+function openDialog(screen, studentId, action) {
+  const s = screen2State.find(st => st.id === studentId);
+  if (!s) return;
+  pendingAction2 = { studentId, action };
+  const dialog = document.getElementById('dialog2');
+  const icon = document.getElementById('dialogIcon2');
+  const title = document.getElementById('dialogTitle2');
+  const body = document.getElementById('dialogBody2');
+  const confirm = document.getElementById('dialogConfirm2');
+
+  if (action === 'complete') {
+    icon.textContent = '✓'; icon.style.color = '#34C759';
+    title.textContent = '确认签到';
+    body.innerHTML = `确认 <strong>${s.name}</strong> 已完成本节课程？<br>将从其课时包扣减 <strong>1 课时</strong>。`;
+    confirm.textContent = '确认签到'; confirm.style.background = 'var(--primary)';
+  } else {
+    icon.textContent = '!'; icon.style.color = '#FF9500';
+    title.textContent = '确认缺席';
+    body.innerHTML = `确认 <strong>${s.name}</strong> 缺席本节课程？<br>将从其课时包扣减 <strong>1 课时</strong>。`;
+    confirm.textContent = '确认缺席'; confirm.style.background = '#FF9500';
+  }
+  dialog.classList.add('show');
+}
+
+function closeDialog(screen) {
+  document.getElementById('dialog2').classList.remove('show');
+  pendingAction2 = null;
+}
+
+function confirmDialog(screen) {
+  const dialog = document.getElementById('dialog' + screen);
+  const action = dialog.dataset.action;
+  dialog.classList.remove('show');
+
+  if (action === 'cancel') {
+    // Cancel entire lesson — reset all students to scheduled, refund
+    if (screen === 2) {
+      screen2State.forEach(s => { s.status = 'scheduled'; });
+      renderStudents2();
+    } else {
+      // Screen 3 static — reset to initial mixed state
+      location.reload();
+    }
+    showToast(screen, '课程已取消，已扣课时全部退回');
+    return;
+  }
+
+  if (screen === 2) {
+    const pending = screen2State.filter(s => s.status === 'scheduled');
+    pending.forEach(s => {
+      s.status = action === 'complete' ? 'completed' : 'absent';
+      if (action === 'complete') s.remaining--;
+    });
+    renderStudents2();
+    const verb = action === 'complete' ? '签到完成' : '标记缺席';
+    showToast(screen, `${pending.length} 名学员${verb}，各扣 1 课时`);
+  } else {
+    // Screen 3 — update 小红
+    const card = document.querySelector('#studentCards3 .stu-card[data-sid="2"]');
+    if (card) {
+      const isComplete = action === 'complete';
+      card.classList.remove('interactive'); card.classList.add('done');
+      card.querySelector('.stu-badge').className = 'stu-badge ' + (isComplete ? 'completed' : 'absent');
+      card.querySelector('.stu-badge').textContent = isComplete ? '已完成 ✓' : '已缺席';
+      card.querySelector('.stu-meta').textContent = '已扣 1 课时 · 剩余 11 课时';
+      card.querySelector('.stu-actions').remove();
+    }
+    document.getElementById('progress3').style.width = '100%';
+    document.getElementById('progressText3').textContent = '2 / 2 已签到';
+    document.getElementById('progressText3').style.color = '#34C759';
+    const pill = document.querySelector('#phone3 .lesson-status-pill');
+    pill.classList.remove('mixed'); pill.classList.add('all-done');
+    pill.innerHTML = '<span class="status-dot"></span> 已完成';
+    document.querySelector('#phone3 .lesson-status-sub').textContent = '全部 2 名学员已完成';
+    document.getElementById('bottomBar3').innerHTML = '<div style="text-align:center;width:100%;font-size:13px;color:var(--secondary);">全部学员已签到</div>';
+    const verb = action === 'complete' ? '签到完成' : '标记缺席';
+    showToast(3, `小红 ${verb}，已扣 1 课时`);
+  }
+}
+
+function checkinStudent(screen, studentId) {
+  openDialog(screen, studentId, 'complete');
+}
+
+function batchAction(screen, action) {
+  const dialogId = screen === 2 ? 'dialog2' : 'dialog3';
+  const dialog = document.getElementById(dialogId);
+  const title = dialog.querySelector('.dialog-title');
+  const body = dialog.querySelector('.dialog-body');
+  const confirm = dialog.querySelector('.dialog-btn-primary');
+
+  if (action === 'cancel') {
+    title.textContent = '确认取消课程';
+    body.innerHTML = '确认取消本节课程？<br>所有学员的签到记录将被清除，<strong>已扣课时自动退回</strong>。';
+    confirm.textContent = '确认取消'; confirm.style.background = '#F5222D';
+    dialog.dataset.action = 'cancel';
+    dialog.classList.add('show');
+    return;
+  }
+
+  let names, count;
+  if (screen === 2) {
+    const pending = screen2State.filter(s => s.status === 'scheduled');
+    if (pending.length === 0) return;
+    names = pending.map(s => `<strong>${s.name}</strong>`).join('、');
+    count = pending.length;
+  } else {
+    names = '<strong>小红</strong>';
+    count = 1;
+  }
+
+  if (action === 'complete') {
+    title.textContent = `确认签到（${count}人）`;
+    body.innerHTML = `确认以下学员已完成本节课程？<br>${names}<br>每人将从其课时包扣减 <strong>1 课时</strong>。`;
+    confirm.textContent = '确认签到'; confirm.style.background = 'var(--primary)';
+    dialog.dataset.action = 'complete';
+  } else {
+    title.textContent = `确认缺席（${count}人）`;
+    body.innerHTML = `确认以下学员缺席本节课程？<br>${names}<br>每人将从其课时包扣减 <strong>1 课时</strong>。`;
+    confirm.textContent = '确认缺席'; confirm.style.background = '#FF9500';
+    dialog.dataset.action = 'absent';
+  }
+  dialog.classList.add('show');
+}
+
+function showToast(screen, msg) {
+  const toast = document.getElementById('toast' + screen);
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ============ SCREEN 3: Mixed State ============
+function renderStudents3() {
+  const container = document.getElementById('studentCards3');
+  container.innerHTML = `
+    <div class="stu-card done">
+      <div class="stu-avatar">明</div>
+      <div class="stu-info"><div class="stu-name">小明</div><div class="stu-meta">已扣 1 课时 · 剩余 7 课时</div></div>
+      <span class="stu-badge completed">已完成 ✓</span>
+    </div>
+    <div class="stu-card interactive" data-sid="2">
+      <div class="stu-avatar">红</div>
+      <div class="stu-info"><div class="stu-name">小红</div><div class="stu-meta">剩余 12 课时 · 钢琴进阶包</div></div>
+      <span class="stu-badge scheduled">待签到</span>
+      <div class="stu-actions">
+        <button class="stu-btn stu-btn-done" onclick="event.stopPropagation();batchAction(3,'complete')">✓</button>
+        <button class="stu-btn stu-btn-absent" onclick="event.stopPropagation();batchAction(3,'absent')">!</button>
+      </div>
+    </div>`;
+}
+
+// ============ SCREEN 4: Correct Student Status ============
+function toggleCorrectStudent(el, sid) {
+  // Visual feedback only for the wireframe
+  el.style.background = '#FAFAFA';
+  setTimeout(() => el.style.background = '', 300);
+}
+
+// ============ SCREEN 2b: Single-Student Check-in ============
+function singleCheckin(action) { batchAction2b(action); }
+
+function batchAction2b(action) {
+  const dialog = document.getElementById('dialog2b');
+  const title = document.getElementById('dialogTitle2b');
+  const body = document.getElementById('dialogBody2b');
+  const confirm = document.getElementById('dialogConfirm2b');
+
+  if (action === 'cancel') {
+    title.textContent = '确认取消课程';
+    body.innerHTML = '确认取消本节课程？<br><strong>小明</strong> 的签到记录将被清除，已扣课时自动退回。';
+    confirm.textContent = '确认取消'; confirm.style.background = '#F5222D';
+    dialog.dataset.action = 'cancel';
+  } else if (action === 'complete') {
+    title.textContent = '确认签到（1人）';
+    body.innerHTML = '确认 <strong>小明</strong> 已完成本节课程？<br>将从其课时包扣减 <strong>1 课时</strong>。';
+    confirm.textContent = '确认签到'; confirm.style.background = 'var(--primary)';
+    dialog.dataset.action = 'complete';
+  } else {
+    title.textContent = '确认缺席（1人）';
+    body.innerHTML = '确认 <strong>小明</strong> 缺席本节课程？<br>将从其课时包扣减 <strong>1 课时</strong>。';
+    confirm.textContent = '确认缺席'; confirm.style.background = '#FF9500';
+    dialog.dataset.action = 'absent';
+  }
+  dialog.classList.add('show');
+}
+
+function confirmDialog2b() {
+  const dialog = document.getElementById('dialog2b');
+  const action = dialog.dataset.action;
+  dialog.classList.remove('show');
+
+  const phone = document.querySelector('#phone2b-bar').closest('.phone');
+  if (action === 'cancel') {
+    phone.querySelector('.lesson-status-pill').className = 'lesson-status-pill';
+    phone.querySelector('.lesson-status-pill').style.background = '#F2F2F7'; phone.querySelector('.lesson-status-pill').style.color = '#8E8E93';
+    phone.querySelector('.lesson-status-pill').innerHTML = '<span class="status-dot"></span> 已取消';
+    phone.querySelector('.lesson-status-sub').textContent = '课程已取消，课时已退回';
+    phone.querySelector('.stu-badge').className = 'stu-badge'; phone.querySelector('.stu-badge').style.color = '#8E8E93';
+    phone.querySelector('.stu-badge').textContent = '已取消';
+    phone.querySelector('.stu-actions').style.display = 'none';
+    phone.querySelector('.bottom-bar').innerHTML = '<div style="text-align:center;width:100%;font-size:13px;color:var(--secondary);">课程已取消</div>';
+    return;
+  }
+  singleCheckinDirect(action);
+}
+
+function singleCheckinDirect(action) {
+  const done = action === 'complete';
+  const phone = document.querySelector('#phone2b-bar').closest('.phone');
+  phone.querySelector('.stu-card').classList.remove('interactive');
+  phone.querySelector('.stu-card').style.background = '#FAFAFA';
+  phone.querySelector('.stu-card').classList.add('pulse');
+  phone.querySelector('.stu-badge').className = 'stu-badge ' + (done ? 'completed' : 'absent');
+  phone.querySelector('.stu-badge').textContent = done ? '已完成 ✓' : '已缺席';
+  phone.querySelector('.stu-actions').style.display = 'none';
+  phone.querySelector('.checkin-progress-fill').style.width = '100%';
+  phone.querySelector('.checkin-progress-text').textContent = '1 / 1 已签到';
+  phone.querySelector('.checkin-progress-text').style.color = '#34C759';
+  const pw = phone.querySelector('.progress-card-wrapper');
+  pw.classList.add('completed');
+  phone.querySelector('.progress-card-fill').style.width = '100%';
+  const pill = phone.querySelector('.lesson-status-pill');
+  pill.classList.remove('all-scheduled'); pill.classList.add('all-done');
+  pill.innerHTML = '<span class="status-dot"></span> 已完成';
+  phone.querySelector('.lesson-status-sub').textContent = done ? '学员已完成签到' : '学员已标记缺席';
+  phone.querySelector('.bottom-bar').innerHTML = '<div style="text-align:center;width:100%;font-size:13px;color:var(--secondary);">学员已签到</div>';
+}
+
+// ============ INIT ============
+renderStudents2();
+renderStudents3();
+// Open the first eval card by default
+document.getElementById('evalMing').classList.add('open');
+
+// ============ PER-STUDENT EVALUATION INTERACTIONS ============
+
+// Toggle evaluation section collapse
+function toggleSection(cardEl) {
+  const arrow = cardEl.querySelector('.section-arrow');
+  const body = cardEl.querySelector('.section-body');
+  if (arrow) arrow.classList.toggle('collapsed');
+  if (body) body.classList.toggle('collapsed');
+}
+
+function toggleEvalSection(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('open');
+  const body = card.querySelector('.eval-body');
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+  } else {
+    body.style.display = 'none';
+  }
+}
+
+// Switch student tab on rating/note edit screen
+function switchEvalTab(el, idx) {
+  el.parentElement.querySelectorAll('.eval-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Star click interactions
+document.querySelectorAll('.star-pick').forEach(star => {
+  star.addEventListener('click', function() {
+    const container = this.parentElement;
+    const stars = container.querySelectorAll('.star-pick');
+    const idx = Array.from(stars).indexOf(this);
+    // Fill up to clicked star; cannot unset (minimum 1 star if any interaction)
+    for (let i = 0; i < stars.length; i++) {
+      if (i <= idx) stars[i].classList.add('filled');
+      else stars[i].classList.remove('filled');
+    }
+  });
+});
+
+// Close overlays on background click
+document.querySelectorAll('.overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+});
+</script>
+
+</body>
+</html>
